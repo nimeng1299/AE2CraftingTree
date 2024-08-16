@@ -1,0 +1,42 @@
+{
+  "$schema": "schema.json",
+  "includes": ["common.json"],
+  "generatedBackground": {
+    "width": 200,
+    "height": 216
+  },
+  "text": {
+    "dialog_title": {
+      "position": {
+        "left": 8,
+        "top": 7
+      },
+      "text": {
+        "translate": "gui.ae2ct.TerminalSettingsTitle"
+      }
+    },
+    "search_settings_title": {
+      "position": {
+        "left": 8,
+        "top": 110
+      },
+      "text": {
+        "translate": "gui.ae2ct.ShowCraftingTree"
+      }
+    }
+  },
+  "widgets": {
+    "back": {
+      "left": 176,
+      "top": -5,
+      "width": 20,
+      "height": 20
+    },
+    "tree": {
+      "left": 10,
+      "top": 10,
+      "width": 200,
+      "height": 200
+    }
+  }
+}
