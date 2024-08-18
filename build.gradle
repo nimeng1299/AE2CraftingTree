@@ -26,6 +26,11 @@ repositories {
             includeGroup("appeng")
         }
     }
+    maven {
+        // location of the maven that hosts JEI files since January 2023
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
+    }
 }
 
 base {
@@ -128,7 +133,11 @@ dependencies {
     // compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${jei_version}"
     // We add the full version to localRuntime, not runtimeOnly, so that we do not publish a dependency on it
     // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
-
+    // compile against the JEI API but do not include it at runtime
+    compileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+    // at runtime, use the full JEI jar for NeoForge
+    runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
@@ -164,7 +173,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     inputs.properties replaceProperties
     expand replaceProperties
     from("src/main/templates") {
-        exclude "assets/**/*.json"  // 排除 JSON 文件
+        exclude "assets/**"  // 排除 JSON 文件
     }
 
     into "build/generated/sources/modMetadata"
@@ -174,7 +183,11 @@ var generateModMetadataJson = tasks.register("generateModMetadataJson", ProcessR
     from "src/main/templates/assets"
 
     into "build/generated/sources/modMetadata/assets"
+
+
 }
+
+
 // Include the output of "generateModMetadata" as an input directory for the build
 // this works with both building through Gradle and the IDE.
 sourceSets.main.resources.srcDir generateModMetadata
@@ -186,6 +199,8 @@ neoForge.ideSyncTask generateModMetadata
 sourceSets.main.resources.srcDir generateModMetadataJson
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadataJson
+
+
 
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {

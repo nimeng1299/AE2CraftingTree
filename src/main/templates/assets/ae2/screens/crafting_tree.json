@@ -12,16 +12,7 @@
         "top": 7
       },
       "text": {
-        "translate": "gui.ae2ct.TerminalSettingsTitle"
-      }
-    },
-    "search_settings_title": {
-      "position": {
-        "left": 8,
-        "top": 110
-      },
-      "text": {
-        "translate": "gui.ae2ct.ShowCraftingTree"
+        "translate": "gui.ae2ct.CraftingTreeTitle"
       }
     }
   },
@@ -31,12 +22,6 @@
       "top": -5,
       "width": 20,
       "height": 20
-    },
-    "tree": {
-      "left": 10,
-      "top": 10,
-      "width": 200,
-      "height": 200
     }
   }
 }

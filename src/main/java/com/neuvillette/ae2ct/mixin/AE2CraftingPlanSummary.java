@@ -28,13 +28,15 @@ public class AE2CraftingPlanSummary implements ICraftingPlanSummary {
 
     @Inject(at = @At("TAIL"), method = "write")
     private void write(RegistryFriendlyByteBuf buffer, CallbackInfo ci){
-        //
+        jobs.write(buffer);
     }
 
-    @Inject(at = @At("TAIL"), method = "read")
+    @Inject(at = @At("TAIL"), method = "read", cancellable = true)
     private static void read(RegistryFriendlyByteBuf buffer, CallbackInfoReturnable<CraftingPlanSummary> cir){
         var r = cir.getReturnValue();
-        //((ICraftingPlanSummary)r).setJob((new CraftingPlan(null, buffer.readInt(), false, false, null, null, null, null)));
+        var h = RecipeHelper.read(buffer);
+        ((ICraftingPlanSummary)r).setJob(h);
+        cir.setReturnValue(r);
 
     }
 
