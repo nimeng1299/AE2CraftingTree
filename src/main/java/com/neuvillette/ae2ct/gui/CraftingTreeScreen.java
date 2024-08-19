@@ -20,7 +20,7 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
          this.parent = parent;
-         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob());
+         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
          addBackButton();
 
     }

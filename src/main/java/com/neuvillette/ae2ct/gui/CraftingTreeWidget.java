@@ -5,6 +5,7 @@ import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AmountFormat;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
+import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
@@ -18,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 
 import java.awt.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class CraftingTreeWidget {
@@ -31,10 +33,10 @@ public class CraftingTreeWidget {
     private int spacingY = 30;
     private int stackLength = 8;
     private float scroll = 1.0f;
-    public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data) {
+    public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data, List<CraftingPlanSummaryEntry> entries) {
         this.screen = screen;
         this.data = data;
-        this.helper = new CraftingTreeHelper(data);
+        this.helper = new CraftingTreeHelper(data, entries);
         this.future = CompletableFuture.supplyAsync(() -> helper.buildNode());
     }
 
@@ -68,13 +70,29 @@ public class CraftingTreeWidget {
             var x = mouseX - screen.getGuiLeft() + 10;
             var y = mouseY - screen.getGuiTop() + 10;
             var lines =AEKeyRendering.getTooltip(stack.what());
+            var a = node.amountHelper();
             if(stack.what() == this.data.output.what()){
+                //output
                 lines.add(ToolTipText.OutputAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
             }else if(node.subNodes() == null || node.subNodes().isEmpty()){
+                //input
                 lines.add(ToolTipText.InputAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
+                lines.add(ToolTipText.Info.text());
+                if(a.storedAmount > 0)
+                    lines.add(ToolTipText.StoredAmount.text(stack.what().formatAmount(a.storedAmount, AmountFormat.FULL)));
+                if(a.missingAmount > 0)
+                    lines.add(ToolTipText.MissingAmount.text(stack.what().formatAmount(a.missingAmount, AmountFormat.FULL)));
             }else{
+                //midden
                 lines.add(ToolTipText.MiddenAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
+                lines.add(ToolTipText.Info.text());
+                if(a.storedAmount > 0)
+                    lines.add(ToolTipText.StoredAmount.text(stack.what().formatAmount(a.storedAmount, AmountFormat.FULL)));
+                if(a.craftAmount > 0)
+                    lines.add(ToolTipText.CraftingAmount.text(stack.what().formatAmount(a.craftAmount, AmountFormat.FULL)));
+
             }
+
             screen.drawTooltipWithHeader(guiGraphics, mouseX - screen.getGuiLeft(), mouseY - screen.getGuiTop(), lines);
         }
     }
@@ -86,7 +104,11 @@ public class CraftingTreeWidget {
         int y = node.position().y * spacingY + outputY;
 
         if(node.subNodes() != null) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
-        guiGraphics.blit(ResourceLocation.fromNamespaceAndPath(AE2ct.MODID, "icon.png"), x - 3 , y - 3, 0, 0, 22, 22);
+        if(node.amountHelper().missingAmount <= 0) {
+            guiGraphics.blit(ResourceLocation.fromNamespaceAndPath(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 0, 22, 22);
+        }else{
+            guiGraphics.blit(ResourceLocation.fromNamespaceAndPath(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 22, 22, 22);
+        }
         AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, x, y, stack.what());
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();

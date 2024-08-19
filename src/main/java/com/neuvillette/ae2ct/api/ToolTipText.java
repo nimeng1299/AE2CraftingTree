@@ -9,6 +9,10 @@ public enum ToolTipText implements LocalizationEnum {
     OutputAmount("Output: %s"),
     InputAmount("need: %s"),
     MiddenAmount("use: %s"),
+    Info("info:"),
+    CraftingAmount("Crafting: %s"),
+    MissingAmount("Missing: %s"),
+    StoredAmount("Stored: %s")
     ;
     private final String englishText;
 

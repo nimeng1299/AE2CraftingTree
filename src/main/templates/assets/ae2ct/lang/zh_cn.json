@@ -3,5 +3,9 @@
   "gui.ae2ct.ShowTree": "打开合成树",
   "gui.ae2ct.OutputAmount": "制作数量: %s",
   "gui.ae2ct.InputAmount": "需要数量: %s",
-  "gui.ae2ct.MiddenAmount": "缓存数量: %s"
+  "gui.ae2ct.MiddenAmount": "制作数量: %s",
+  "gui.ae2ct.Info": "统计:",
+  "gui.ae2ct.CraftingAmount": "合成数量: %s",
+  "gui.ae2ct.MissingAmount": "缺失数量: %s",
+  "gui.ae2ct.StoredAmount": "拥有数量: %s"
 }
