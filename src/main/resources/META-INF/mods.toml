@@ -61,3 +61,11 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId="ae2"
+type="required"
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
+versionRange="[15.2.12, 99.99.99)"
+ordering="AFTER"
+side="BOTH"
