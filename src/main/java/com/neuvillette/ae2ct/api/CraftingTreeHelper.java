@@ -70,7 +70,8 @@ public class CraftingTreeHelper {
         List<Node> nodes = new ArrayList<>();
         var amoCache = amountCache.get(stack.what());
         if(inputs.isEmpty()){
-            AmountHelper a = new AmountHelper(amoCache.missingAmount, AmountHelper.check(amount - amoCache.missingAmount), 0);
+            var storedAmo = AmountHelper.check(amount - amoCache.missingAmount);
+            AmountHelper a = new AmountHelper(AmountHelper.check(amount - storedAmo), storedAmo, 0);
             amountCache.put(stack.what(), new AmountHelper(AmountHelper.check(amoCache.missingAmount - amount), amoCache.storedAmount, amoCache.craftAmount));
             Node n =  new Node(stack, amount, new Point(x, y), null, 1, a);
             nodesMap.put(n.position(), n);
