@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.neuvillette.ae2ct.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "ae2ct.refmap.json",
+  "mixins": [
+    "Ae2CraftConfirmScreen",
+    "AE2CraftingPlanSummary"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
