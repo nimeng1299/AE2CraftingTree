@@ -181,8 +181,13 @@ public class CraftingTreeWidget {
     public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double dragX, double dragY) {
         if(isMouseOutScreen(mouseX, mouseY)) return true;
         if(mouseButton == 1){
-            outputX += (int) dragX;
-            outputY += (int) dragY;
+            if(scroll <= 0.3) {
+                outputX += ((int) dragX * 2);
+                outputY += ((int) dragY * 2);
+            }else{
+                outputX += (int) dragX;
+                outputY += (int) dragY;
+            }
         }
         return true;
     }
@@ -203,19 +208,23 @@ public class CraftingTreeWidget {
     }
 
     private Point getMousePoint(GuiGraphics guiGraphics, double mouseX, double mouseY){
-        if(isMouseOutScreen(mouseX, mouseY)) return new Point(-1, -1);
-        int x = (int) (mouseX - screen.getGuiLeft() - outputX * scroll);
-        int y = (int) (mouseY - screen.getGuiTop() - outputY * scroll);
-        int sizeX = (int) ( spacingX * scroll);
-        int sizeY = (int) (spacingY * scroll);
-        int i = x / sizeX;
-        int j = y / sizeY;
-        int left = (int) (i * spacingX * scroll);
-        int top = (int) (j * spacingY * scroll);
-        int right = (int) ((i * spacingX + stackLength * 2)  * scroll);
-        int bottom = (int) ((j * spacingY + stackLength * 2) * scroll);
-        if(x > left && x < right && y > top && y < bottom){
-            return new Point(i, j);
-        } else return new Point(-1, -1);
+        try {
+            if (isMouseOutScreen(mouseX, mouseY)) return new Point(-1, -1);
+            int x = (int) (mouseX - screen.getGuiLeft() - outputX * scroll);
+            int y = (int) (mouseY - screen.getGuiTop() - outputY * scroll);
+            int sizeX = (int) (spacingX * scroll);
+            int sizeY = (int) (spacingY * scroll);
+            int i = x / sizeX;
+            int j = y / sizeY;
+            int left = (int) (i * spacingX * scroll);
+            int top = (int) (j * spacingY * scroll);
+            int right = (int) ((i * spacingX + stackLength * 2) * scroll);
+            int bottom = (int) ((j * spacingY + stackLength * 2) * scroll);
+            if (x > left && x < right && y > top && y < bottom) {
+                return new Point(i, j);
+            } else return new Point(-1, -1);
+        }catch (Exception e){
+            return new Point(-1, -1);
+        }
     }
 }
