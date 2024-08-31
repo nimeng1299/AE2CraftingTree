@@ -1,0 +1,11 @@
+{
+  "gui.ae2ct.CraftingTreeTitle": "Crafting Tree",
+  "gui.ae2ct.ShowTree": "Show Crafting Tree",
+  "gui.ae2ct.OutputAmount": "crafting: %s",
+  "gui.ae2ct.InputAmount": "need: %s",
+  "gui.ae2ct.MiddenAmount": "use: %s",
+  "gui.ae2ct.Info": "Info:",
+  "gui.ae2ct.CraftingAmount": "crafting: %s",
+  "gui.ae2ct.MissingAmount": "missing: %s",
+  "gui.ae2ct.StoredAmount": "stored: %s"
+}
