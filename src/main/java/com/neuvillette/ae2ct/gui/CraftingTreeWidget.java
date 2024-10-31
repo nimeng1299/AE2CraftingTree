@@ -172,18 +172,18 @@ public class CraftingTreeWidget {
 
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         if(isMouseOutScreen(mouseX, mouseY)) return true;
-        scroll += deltaY * 0.1;
-        if (scroll <= 0f) scroll = 0.1f;
+        scroll += (float) (deltaY * 0.1);
+        if (scroll <= 0.1f) scroll = 0.1f;
         if (scroll >= 10f) scroll = 10f;
         return true;
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double dragX, double dragY) {
         if(isMouseOutScreen(mouseX, mouseY)) return true;
-        if(mouseButton == 1){
+        if(mouseButton == 1 || mouseButton == 0){
             if(scroll <= 0.3f) {
-                outputX += (int) dragX * 2;
-                outputY += (int) dragY * 2;
+                outputX += (int) (dragX * 2.5);
+                outputY += (int) (dragY * 2.5);
             }else {
                 outputX += (int) dragX;
                 outputY += (int) dragY;
