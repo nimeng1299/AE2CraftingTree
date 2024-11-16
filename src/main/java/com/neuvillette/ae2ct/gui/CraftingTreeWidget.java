@@ -106,7 +106,7 @@ public class CraftingTreeWidget {
         int x = node.position().x * spacingX + outputX;
         int y = node.position().y * spacingY + outputY;
 
-        if(x > screen.getGuiLeft() + screen.width + 10 || y > screen.getGuiTop() + screen.height + 10) return;
+        if(x * scroll > screen.getGuiLeft() + screen.width + 10 || y * scroll > screen.getGuiTop() + screen.height + 10) return;
 
         if(node.subNodes() != null) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
         if(node.amountHelper().missingAmount <= 0) {
