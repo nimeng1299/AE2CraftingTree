@@ -25,7 +25,17 @@ public class Ae2CraftConfirmScreen extends AEBaseScreen<CraftConfirmMenu> {
     @Inject(at = @At("RETURN"), method = "<init>")
     private void CraftConfirmScreenInit(CraftConfirmMenu menu, Inventory playerInventory, Component title,
                       ScreenStyle style, CallbackInfo info){
-        this.addToLeftToolbar(new ChangeButton(() -> {switchToScreen(new CraftingTreeScreen((CraftConfirmScreen) (Object) this));}, Icon.CRAFT_HAMMER, ToolTipText.ShowTree));
+        this.addToLeftToolbar(new ChangeButton(() -> {
+            var parent = (CraftConfirmScreen) (Object) this;
+            if(parent.getMenu().getPlan() == null)
+            {
+                parent.getMenu().getPlayer().sendSystemMessage(Component.translatable("ae2ct.openscreen.plannull"));
+            }
+            else{
+                switchToScreen(new CraftingTreeScreen((CraftConfirmScreen) (Object) this));
+            }
+
+            }, Icon.CRAFT_HAMMER, ToolTipText.ShowTree));
 
     }
 }

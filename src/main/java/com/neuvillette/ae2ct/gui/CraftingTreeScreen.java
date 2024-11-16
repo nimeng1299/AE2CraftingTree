@@ -20,11 +20,6 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
 
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
-         if(parent.getMenu().getPlan() == null)
-         {
-             parent.getMenu().getPlayer().sendSystemMessage(Component.translatable("ae2ct.openscreen.plannull"));
-             returnToParent();
-         }
          craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
          addBackButton();
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));

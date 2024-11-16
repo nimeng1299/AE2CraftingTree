@@ -21,13 +21,28 @@ import org.joml.Matrix4fStack;
 import java.awt.*;
 
 public class ScreenshotHelper {
-    private static final float scale = 2.0f;
+
     public static void Screenshot(CraftingTreeHelper.NodeInfo nodeInfo, Player player) {
         try {
+            float scale = 2.0f;
             Minecraft minecraft = Minecraft.getInstance();
 
             int width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
             int height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
+
+            if(width > 32767)
+            {
+                scale = 32767.0f / (width + 0.1f) * scale;
+                width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
+                height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
+            }
+
+            if(height > 32767)
+            {
+                scale = (32767.0f / (height + 0.1f)) * scale;
+                width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
+                height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
+            }
 
             RenderTarget target = new RenderTarget(true) {
 
