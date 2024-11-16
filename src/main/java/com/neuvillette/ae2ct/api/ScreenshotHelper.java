@@ -14,8 +14,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 
@@ -25,57 +27,62 @@ import static com.neuvillette.ae2ct.gui.CraftingTreeWidget.getDrawAmount;
 
 public class ScreenshotHelper {
     private static final float scale = 2.0f;
-    public static void Screenshot(CraftingTreeHelper.NodeInfo nodeInfo) {
-        Minecraft minecraft = Minecraft.getInstance();
+    public static void Screenshot(CraftingTreeHelper.NodeInfo nodeInfo, Player player) {
+        try {
+            Minecraft minecraft = Minecraft.getInstance();
 
-        int width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
-        int height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
+            int width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
+            int height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
 
-        RenderTarget target = new RenderTarget(true) {
+            RenderTarget target = new RenderTarget(true) {
 
-        };
-        target.createBuffers(width, height, true);
+            };
+            target.createBuffers(width, height, true);
 
-        target.setClearColor(203, 204, 212, 255);
-        target.clear(Minecraft.ON_OSX);
-        target.bindWrite(true);
+            target.setClearColor(203, 204, 212, 255);
+            target.clear(Minecraft.ON_OSX);
+            target.bindWrite(true);
 
-        Matrix4fStack view = RenderSystem.getModelViewStack();
-        view.pushMatrix();
-        view.identity();
-        view.translate(-1.0f, 1.0f, 0.0f);
-        view.scale(6f / width, -6f / height, -1f / 1000f);
-        view.translate(0.0f, 0.0f, 10.0f);
-        RenderSystem.applyModelViewMatrix();
+            Matrix4fStack view = RenderSystem.getModelViewStack();
+            view.pushMatrix();
+            view.identity();
+            view.translate(-1.0f, 1.0f, 0.0f);
+            view.scale(6f / width, -6f / height, -1f / 1000f);
+            view.translate(0.0f, 0.0f, 10.0f);
+            RenderSystem.applyModelViewMatrix();
 
-        Matrix4f backupProj = RenderSystem.getProjectionMatrix();
-        RenderSystem.setProjectionMatrix(new Matrix4f().identity(), VertexSorting.ORTHOGRAPHIC_Z);
-
-
-        MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
-        GuiGraphics guiGraphics = new GuiGraphics(minecraft, bufferSource);
-
-        PoseStack poseStack = guiGraphics.pose();
-        poseStack.pushPose();
+            Matrix4f backupProj = RenderSystem.getProjectionMatrix();
+            RenderSystem.setProjectionMatrix(new Matrix4f().identity(), VertexSorting.ORTHOGRAPHIC_Z);
 
 
-        guiGraphics.fill(0, 0, width, height, 0xffcbccd4);
+            MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
+            GuiGraphics guiGraphics = new GuiGraphics(minecraft, bufferSource);
 
-        poseStack.scale(scale, scale, scale);
+            PoseStack poseStack = guiGraphics.pose();
+            poseStack.pushPose();
 
-        drawNode(guiGraphics, nodeInfo.node());
+
+            guiGraphics.fill(0, 0, width, height, 0xffcbccd4);
+
+            poseStack.scale(scale, scale, scale);
+
+            drawNode(guiGraphics, nodeInfo.node());
 
 
-        guiGraphics.flush();
-        RenderSystem.setProjectionMatrix(backupProj, VertexSorting.ORTHOGRAPHIC_Z);
-        view.popMatrix();
-        RenderSystem.applyModelViewMatrix();
-        target.unbindWrite();
-        target.bindRead();
-        Screenshot.grab(minecraft.gameDirectory, "CraftingTree_" + Util.getFilenameFormattedDateTime() + ".png", target, (component) -> {
-            System.out.println(component.toString());
-        });
-        target.unbindRead();
+            guiGraphics.flush();
+            RenderSystem.setProjectionMatrix(backupProj, VertexSorting.ORTHOGRAPHIC_Z);
+            view.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            target.unbindWrite();
+            target.bindRead();
+            Screenshot.grab(minecraft.gameDirectory, "CraftingTree_" + Util.getFilenameFormattedDateTime() + ".png", target, player::sendSystemMessage);
+            target.unbindRead();
+
+        }
+        catch (Exception e)
+        {
+            player.sendSystemMessage(Component.translatable("ae2ct.screenshot.exception", e.toString()));
+        }
 
     }
 

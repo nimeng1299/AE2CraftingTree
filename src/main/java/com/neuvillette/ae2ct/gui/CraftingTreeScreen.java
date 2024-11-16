@@ -11,6 +11,7 @@ import com.neuvillette.ae2ct.api.ICraftingPlanSummary;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 import java.awt.*;
 import java.util.List;
@@ -22,6 +23,11 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
          this.parent = parent;
+         if(parent.getMenu().getPlan() == null)
+         {
+             parent.getMenu().getPlayer().sendSystemMessage(Component.translatable("ae2ct.openscreen.plannull"));
+             returnToParent();
+         }
          craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
          addBackButton();
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));

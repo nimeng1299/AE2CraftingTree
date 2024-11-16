@@ -146,11 +146,10 @@ public class CraftingTreeWidget {
         try {
             if (future.isDone()) {
                 var nodeInfo = future.get();
-                ScreenshotHelper.Screenshot(nodeInfo);
-                screen.getMenu().getPlayer().sendSystemMessage(Component.literal("Crafting Tree is ready yet. player: " + screen.getMenu().getPlayer().getName()));
+                ScreenshotHelper.Screenshot(nodeInfo, screen.getMenu().getPlayer());
             }else {
                 var player = screen.getMenu().getPlayer();
-                player.sendSystemMessage(Component.literal("Crafting Tree is not ready yet. player: " + player.getName()));
+                player.sendSystemMessage(Component.translatable("ae2ct.screenshot.noready"));
             }
         } catch (Exception e) {
             e.printStackTrace();
