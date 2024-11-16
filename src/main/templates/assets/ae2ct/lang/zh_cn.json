@@ -8,6 +8,7 @@
   "gui.ae2ct.CraftingAmount": "合成数量: %s",
   "gui.ae2ct.MissingAmount": "缺失数量: %s",
   "gui.ae2ct.StoredAmount": "拥有数量: %s",
+  "gui.ae2ct.Screenshot": "截图",
   "ae2ct.screenshot.noready": "截图还没准备好，请稍后重试",
   "ae2ct.screenshot.exception": "截图失败，原因: %s",
   "ae2ct.openscreen.plannull": "等待配方计算完成"

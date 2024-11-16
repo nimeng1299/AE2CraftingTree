@@ -8,6 +8,7 @@
   "gui.ae2ct.CraftingAmount": "crafting: %s",
   "gui.ae2ct.MissingAmount": "missing: %s",
   "gui.ae2ct.StoredAmount": "stored: %s",
+  "gui.ae2ct.Screenshot": "Screenshot",
   "ae2ct.screenshot.noready": "screenshot Not ready yet, please try again later",
   "ae2ct.screenshot.exception": "screenshots faild, reason: %s",
   "ae2ct.openscreen.plannull": "Waiting for craft confirm calculation to complete"
