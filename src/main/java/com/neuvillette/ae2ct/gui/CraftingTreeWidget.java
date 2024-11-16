@@ -11,12 +11,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
 import com.neuvillette.ae2ct.api.CraftingTreeHelper;
 import com.neuvillette.ae2ct.api.RecipeHelper;
+import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.network.chat.Component;
 
 import java.awt.*;
 import java.util.List;
@@ -25,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
 public class CraftingTreeWidget {
     private RecipeHelper data;
     protected final AEBaseScreen<?> screen;
-    private CompletableFuture<CraftingTreeHelper.Node> future = null;
+    private CompletableFuture<CraftingTreeHelper.NodeInfo> future = null;
     private CraftingTreeHelper helper;
     private int outputX = 20;
     private int outputY = 30;
@@ -54,9 +56,9 @@ public class CraftingTreeWidget {
         poseStack.pushPose();
         try {
             if (future.isDone()) {
-                var node = future.get();
+                var nodeInfo = future.get();
                 poseStack.scale(scroll, scroll, scroll);
-                drawNode(guiGraphics, node);
+                drawNode(guiGraphics, nodeInfo.node());
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -103,6 +105,8 @@ public class CraftingTreeWidget {
         int x = node.position().x * spacingX + outputX;
         int y = node.position().y * spacingY + outputY;
 
+        if(x > screen.getGuiLeft() + screen.width + 10 || y > screen.getGuiTop() + screen.height + 10) return;
+
         if(node.subNodes() != null) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
         if(node.amountHelper().missingAmount <= 0) {
             guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 0, 22, 22);
@@ -137,7 +141,21 @@ public class CraftingTreeWidget {
         guiGraphics.hLine(x + stackLength, last.x * spacingX + outputX + stackLength, y + stackLength + spacingY / 2, color);
     }
 
-    private String getDrawAmount(CraftingTreeHelper.Node node){
+    public void screenShot(){
+        try {
+            if (future.isDone()) {
+                var nodeInfo = future.get();
+                ScreenshotHelper.Screenshot(nodeInfo, screen.getMenu().getPlayer());
+            }else {
+                var player = screen.getMenu().getPlayer();
+                player.sendSystemMessage(Component.translatable("ae2ct.screenshot.noready"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getDrawAmount(CraftingTreeHelper.Node node){
         var amount = node.amount();
         if(node.stack().what() instanceof AEFluidKey){
             if (amount >= 1_000) {
@@ -157,7 +175,7 @@ public class CraftingTreeWidget {
             }
         }
     }
-    private static String formatNumber(double number) {
+    public static String formatNumber(double number) {
         if (number == (long) number) {
             return String.format("%d", (long) number);
         } else {
@@ -172,19 +190,19 @@ public class CraftingTreeWidget {
 
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         if(isMouseOutScreen(mouseX, mouseY)) return true;
-        scroll += deltaY * 0.1;
-        if (scroll <= 0f) scroll = 0.1f;
+        scroll += (float) (deltaY * 0.1);
+        if (scroll <= 0.1f) scroll = 0.1f;
         if (scroll >= 10f) scroll = 10f;
         return true;
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double dragX, double dragY) {
         if(isMouseOutScreen(mouseX, mouseY)) return true;
-        if(mouseButton == 1){
-            if(scroll <= 0.3) {
-                outputX += ((int) dragX * 2);
-                outputY += ((int) dragY * 2);
-            }else{
+        if(mouseButton == 1 || mouseButton == 0){
+            if(scroll <= 0.3f) {
+                outputX += (int) (dragX * 2.5);
+                outputY += (int) (dragY * 2.5);
+            }else {
                 outputX += (int) dragX;
                 outputY += (int) dragY;
             }

@@ -16,12 +16,15 @@ public class CraftingTreeHelper {
     private Map<AEKey, RecipeHelper.Recipe> cache = new HashMap<>();
     private Map<AEKey, AmountHelper> amountCache = new HashMap<>();
     private Map<Point, Node> nodesMap = new HashMap<>();
+
+    private int max_x = 0;
+    private int max_y = 0;
     public CraftingTreeHelper(RecipeHelper recipeHelper, List<CraftingPlanSummaryEntry> entries) {
         this.recipeHelper = recipeHelper;
         this.entries = entries;
     }
 
-    public Node buildNode(){
+    public NodeInfo buildNode(){
         if (recipeHelper == null) return null;
 
         cache.clear();
@@ -57,8 +60,10 @@ public class CraftingTreeHelper {
                 break;
             }
         }
-
-        return build(output, amount, new Point(0, -1), inputs, times, 0, outputamount);
+        max_x = 0;
+        max_y = 0;
+        Node node =  build(output, amount, new Point(0, -1), inputs, times, 0, outputamount);
+        return new NodeInfo(node, max_x + 1, max_y + 1);
     }
 
     private Node build(GenericStack stack, Long amount, Point position,List<GenericStack> inputs, long times, int len, long outputamount){
@@ -66,6 +71,8 @@ public class CraftingTreeHelper {
         if(cache == null || cache.isEmpty() || amountCache == null || amountCache.isEmpty()) return null;
         int x = position.x + len;
         int y = position.y + 1;
+        if (x > max_x) max_x = x;
+        if (y > max_y) max_y = y;
         int l = 0;
         List<Node> nodes = new ArrayList<>();
         var amoCache = amountCache.get(stack.what());
@@ -126,6 +133,11 @@ public class CraftingTreeHelper {
             AmountHelper amountHelper
     ){
 
+    }
+    public record NodeInfo (
+            Node node,
+            int max_x,
+            int max_y){
     }
 
     public static class AmountHelper{
