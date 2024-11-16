@@ -8,6 +8,8 @@ import appeng.client.gui.widgets.TabButton;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.neuvillette.ae2ct.api.ICraftingPlanSummary;
+import com.neuvillette.ae2ct.api.ScreenshotHelper;
+import com.neuvillette.ae2ct.api.ToolTipText;
 import net.minecraft.client.gui.GuiGraphics;
 
 import java.awt.*;
@@ -22,6 +24,7 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
          this.parent = parent;
          craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
          addBackButton();
+         this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));
 
     }
 

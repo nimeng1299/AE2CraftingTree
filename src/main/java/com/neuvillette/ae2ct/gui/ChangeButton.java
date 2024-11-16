@@ -8,18 +8,19 @@ import com.neuvillette.ae2ct.api.ToolTipText;
 import net.minecraft.network.chat.Component;
 
 public class ChangeButton extends IconButton {
-    public ChangeButton(Runnable onPress) {
+    Icon icon;
+    public ChangeButton(Runnable onPress, Icon icon, ToolTipText displayName) {
         super(btn -> onPress.run());
-        setMessage(buildMessage());
+        this.icon = icon;
+        setMessage(buildMessage(displayName));
     }
 
     @Override
     protected Icon getIcon() {
-        return Icon.CRAFT_HAMMER;
+        return icon;
     }
 
-    private Component buildMessage() {
-        ToolTipText displayName = ToolTipText.ShowTree;
+    private Component buildMessage(ToolTipText displayName) {
         String name = displayName.text().getString();
         return Component.literal(name);
     }

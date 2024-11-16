@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 
 public enum ToolTipText implements LocalizationEnum {
     ShowTree("Show Crafting Tree"),
+    Screenshot("Screenshot"),
     OutputAmount("Output: %s"),
     InputAmount("need: %s"),
     MiddenAmount("use: %s"),
