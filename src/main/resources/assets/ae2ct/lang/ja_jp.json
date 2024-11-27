@@ -1,0 +1,15 @@
+{
+  "gui.ae2ct.CraftingTreeTitle": "クラフトツリー",
+  "gui.ae2ct.ShowTree": "クラフトツリーを表示",
+  "gui.ae2ct.OutputAmount": "クラフト: %s",
+  "gui.ae2ct.InputAmount": "必要: %s",
+  "gui.ae2ct.MiddenAmount": "使用: %s",
+  "gui.ae2ct.Info": "詳細:",
+  "gui.ae2ct.CraftingAmount": "クラフト: %s",
+  "gui.ae2ct.MissingAmount": "欠落: %s",
+  "gui.ae2ct.StoredAmount": "在庫: %s",
+  "gui.ae2ct.Screenshot": "スクリーンショット",
+  "ae2ct.screenshot.noready": "スクリーンショットの準備ができていないので、後でもう一度お試しください。",
+  "ae2ct.screenshot.exception": "スクリーンショットが失敗しました。理由: %s",
+  "ae2ct.openscreen.plannull": "クラフト確認計算の完了を待っています"
+}
