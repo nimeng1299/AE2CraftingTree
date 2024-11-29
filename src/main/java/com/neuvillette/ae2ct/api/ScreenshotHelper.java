@@ -1,92 +1,65 @@
 package com.neuvillette.ae2ct.api;
 
 import appeng.api.client.AEKeyRendering;
+import appeng.api.stacks.AEKey;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.neuvillette.ae2ct.AE2ct;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fStack;
 
+import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+
+import static net.minecraft.client.Screenshot.takeScreenshot;
 
 public class ScreenshotHelper {
+    private final static int scale = 2;
 
     public static void Screenshot(CraftingTreeHelper.NodeInfo nodeInfo, Player player) {
         try {
-            float scale = 2.0f;
+            int scale = 2;
             Minecraft minecraft = Minecraft.getInstance();
 
-            int width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
-            int height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
+            Map<AEKey, Point>map = new HashMap<>();
 
-            if(width > 32767)
-            {
-                scale = 32767.0f / (width + 0.1f) * scale;
-                width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
-                height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
-            }
+            BufferedImage image = new BufferedImage(nodeInfo.max_x() * 110, nodeInfo.max_y() * 110, 6);
+            var graphics = image.createGraphics();
+            graphics.setColor(Color.BLACK);
+            graphics.setStroke(new BasicStroke(4));
+            graphics.setBackground(Color.GRAY);
 
-            if(height > 32767)
-            {
-                scale = (32767.0f / (height + 0.1f)) * scale;
-                width = (int) ((nodeInfo.max_x() * 18 + (nodeInfo.max_x() - 1) * 12 + 15 * 2) * scale * 3);
-                height = (int) ((nodeInfo.max_y() * 18 + (nodeInfo.max_y() - 1) * 12 + 15 * 2) * scale * 3);
-            }
+            BufferedImage stackImage = init(nodeInfo, map);
 
-            RenderTarget target = new RenderTarget(true) {
-
-            };
-            target.createBuffers(width, height, true);
-
-            target.setClearColor(203, 204, 212, 255);
-            target.clear(Minecraft.ON_OSX);
-            target.bindWrite(true);
-
-            PoseStack view = RenderSystem.getModelViewStack();
-            view.pushPose();
-            view.setIdentity();
-            view.translate(-1.0f, 1.0f, 0.0f);
-            view.scale(6f / width, -6f / height, -1f / 1000f);
-            view.translate(0.0f, 0.0f, 10.0f);
-            RenderSystem.applyModelViewMatrix();
-
-            Matrix4f backupProj = RenderSystem.getProjectionMatrix();
-            RenderSystem.setProjectionMatrix(new Matrix4f().identity(), VertexSorting.ORTHOGRAPHIC_Z);
+            draw(graphics, stackImage, nodeInfo.node(), map);
 
 
-            MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
-            GuiGraphics guiGraphics = new GuiGraphics(minecraft, bufferSource);
+            graphics.dispose();
 
-            PoseStack poseStack = guiGraphics.pose();
-            poseStack.pushPose();
-
-
-            guiGraphics.fill(0, 0, width, height, 0xffcbccd4);
-
-            poseStack.scale(scale, scale, scale);
-
-            drawNode(guiGraphics, nodeInfo.node());
-
-
-            guiGraphics.flush();
-            RenderSystem.setProjectionMatrix(backupProj, VertexSorting.ORTHOGRAPHIC_Z);
-            view.popPose();
-            RenderSystem.applyModelViewMatrix();
-            target.unbindWrite();
-            target.bindRead();
-            Screenshot.grab(minecraft.gameDirectory, "CraftingTree_" + Util.getFilenameFormattedDateTime() + ".png", target, player::sendSystemMessage);
-            target.unbindRead();
+            safeImage(minecraft.gameDirectory, "CraftingTree_" + Util.getFilenameFormattedDateTime() + ".png", image, player::sendSystemMessage);
+            //_grab(minecraft.gameDirectory, "CraftingTree_" + Util.getFilenameFormattedDateTime() + ".png", target, player::sendSystemMessage);
 
         }
         catch (Exception e)
@@ -96,35 +69,150 @@ public class ScreenshotHelper {
 
     }
 
-    private static void drawNode(GuiGraphics guiGraphics, CraftingTreeHelper.Node node) {
-        int spacingX = 30;
-        int spacingY = 30;
-        int outputX = 15;
-        int outputY = 15;
-        int stackLength = 8;
+    private static BufferedImage init(CraftingTreeHelper.NodeInfo nodeInfo, Map<AEKey, Point> map) throws IOException {
+        Minecraft minecraft = Minecraft.getInstance();
 
-        var stack = node.stack();
-        var color = FastColor.ARGB32.color(255, 0, 0, 0);
-        int x = node.position().x * spacingX + outputX;
-        int y = node.position().y * spacingY + outputY;
-        if(node.subNodes() != null) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
-        guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 0, 22, 22);
+        Set<AEKey> keys = new HashSet<>();
+        initNode(nodeInfo.node(), keys);
+        int size = keys.size();
+        int len = ((int) Math.sqrt(size)) + 1;
 
-        AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, x, y, stack.what());
+        int simpleLen = 22;
+
+        int width = len * simpleLen * scale * 2;
+        int height = len * simpleLen * scale * 2;
+
+        RenderTarget target = new RenderTarget(true) {
+
+        };
+        target.createBuffers(width, height, true);
+        target.setClearColor(203, 204, 212, 255);
+        target.clear(Minecraft.ON_OSX);
+        target.bindWrite(true);
+
+        PoseStack view = RenderSystem.getModelViewStack();
+        view.pushPose();
+        view.setIdentity();
+        view.translate(-1.0f, 1.0f, 0.0f);
+        view.scale(4f / width, -4f / height, -1f / 1000f);
+        view.translate(0.0f, 0.0f, 10.0f);
+        RenderSystem.applyModelViewMatrix();
+        Matrix4f backupProj = RenderSystem.getProjectionMatrix();
+        RenderSystem.setProjectionMatrix(new Matrix4f().identity(), VertexSorting.ORTHOGRAPHIC_Z);
+
+        MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
+        GuiGraphics guiGraphics = new GuiGraphics(minecraft, bufferSource);
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.scale(scale, scale, scale);
+
+        guiGraphics.fill(0, 0, width / scale, height / scale, 0xffcbccd4);
+
+        int x = 0;
+        int y = 0;
+        for(AEKey key : keys){
+            Point pos = new Point(x, y);
+            map.put(key, pos);
+
+            guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x * simpleLen, y * simpleLen, 0, 0, 22, 22);
+            AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, x * simpleLen + 3, y * simpleLen + 3, key);
+            x++;
+            if (x >= len){
+                x = 0;
+                y++;
+            }
+        }
+
+
+        guiGraphics.flush();
+
+        RenderSystem.setProjectionMatrix(backupProj, VertexSorting.ORTHOGRAPHIC_Z);
+        view.popPose();
+        RenderSystem.applyModelViewMatrix();
+        target.unbindWrite();
+        NativeImage nativeimage = takeScreenshot(target);
+        var img =  ImageIO.read(new ByteArrayInputStream(nativeimage.asByteArray()));
+        target.destroyBuffers();
+        return img;
+    }
+
+    private static void initNode(CraftingTreeHelper.Node node, Set<AEKey> set){
+        set.add(node.stack().what());
+        if(node.subNodes() != null){
+            for (var subNode : node.subNodes()){
+                initNode(subNode, set);
+            }
+        }
+    }
+
+    private static void draw(Graphics2D graphics, BufferedImage stackImage, CraftingTreeHelper.Node node, Map<AEKey, Point> map){
+        int spacing = 110; // 88 + 22
+        int output = 10;
+        int stackLength = 44;
+        int x = node.position().x * spacing + output;
+        int y = node.position().y * spacing + output;
+        if(node.subNodes() != null) graphics.drawLine(x + stackLength, y + stackLength, x + stackLength, y + stackLength + spacing / 2);
+
+        Point pos = map.get(node.stack().what());
+        BufferedImage subImage = stackImage.getSubimage(pos.x * 88, pos.y * 88, 88, 88);
+        graphics.drawImage(subImage, x, y, null);
 
         if(node.subNodes() == null) return;
         Point last = new Point(0, 0);
         for(var child : node.subNodes()){
             var p = child.position();
-            var pX = p.x * spacingX + outputX;
-            var pY = p.y * spacingY + outputY;
-            guiGraphics.vLine(pX + stackLength, y + stackLength + spacingY / 2, pY + stackLength, color);
-            drawNode(guiGraphics, child);
+            var pX = p.x * spacing + output;
+            var pY = p.y * spacing + output;
+            graphics.drawLine(pX + stackLength, y + stackLength + spacing / 2, pX + stackLength, pY + stackLength);
+            draw(graphics, stackImage, child, map);
             if(last.x < p.x){
                 last = p;
             }
         }
-        guiGraphics.hLine(x + stackLength, last.x * spacingX + outputX + stackLength, y + stackLength + spacingY / 2, color);
+        graphics.drawLine(x + stackLength, y + stackLength + spacing / 2, last.x * spacing + output + stackLength, y + stackLength + spacing / 2);
 
+    }
+
+    private static void safeImage(File file, @Nullable String p_92307_, BufferedImage image, Consumer<Component> p_92311_) throws IOException {
+        File file1 = new File(file, "screenshots");
+        file1.mkdir();
+        File file2;
+        if (p_92307_ == null) {
+            file2 = getFile(file1);
+        } else {
+            file2 = new File(file1, p_92307_);
+        }
+        final File target = file2.getCanonicalFile();
+        Util.ioPool().execute(() -> {
+            try {
+                boolean success = ImageIO.write(image, "png", target);
+                if (!success) {
+                    throw new IOException("Failed to write buffered image to file: " + target.getAbsolutePath());
+                }
+                Component component = Component.literal(file2.getName()).withStyle(ChatFormatting.UNDERLINE).withStyle((p_168608_) -> {
+                    return p_168608_.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, target.getAbsolutePath()));
+                });
+                p_92311_.accept(Component.translatable("screenshot.success", component));
+            } catch (Exception exception) {
+                p_92311_.accept(Component.translatable("screenshot.failure", exception.getMessage()));
+            }
+
+        });
+    }
+
+
+
+    private static File getFile(File p_92288_) {
+        String s = Util.getFilenameFormattedDateTime();
+        int i = 1;
+
+        while(true) {
+            File file1 = new File(p_92288_, s + (i == 1 ? "" : "_" + i) + ".png");
+            if (!file1.exists()) {
+                return file1;
+            }
+
+            ++i;
+        }
     }
 }

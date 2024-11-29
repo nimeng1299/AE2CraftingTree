@@ -25,9 +25,8 @@ public class RecipeHelper {
             for(var i : is){
                 var genericStacks = i.getPossibleInputs();
                 var time = i.getMultiplier();
-                for(var g : genericStacks){
-                    inputs.add(new GenericStack(g.what(), g.amount() * time));
-                }
+                var g = genericStacks[0];
+                inputs.add(new GenericStack(g.what(), g.amount() * time));
             }
             recipes.add(new Recipe(inputs, List.of(ouputs), v));
         });
