@@ -76,6 +76,7 @@ public class CraftingTreeHelper {
         int l = 0;
         List<Node> nodes = new ArrayList<>();
         var amoCache = amountCache.get(stack.what());
+        if(amoCache == null) amoCache = new AmountHelper(0, Long.MAX_VALUE, Long.MAX_VALUE);
         if(inputs.isEmpty()){
             var storedAmo = AmountHelper.check(amount - amoCache.missingAmount);
             AmountHelper a = new AmountHelper(AmountHelper.check(amount - storedAmo), storedAmo, 0);
