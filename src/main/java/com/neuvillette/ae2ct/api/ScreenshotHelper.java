@@ -38,22 +38,22 @@ import static net.minecraft.client.Screenshot.takeScreenshot;
 public class ScreenshotHelper {
     private final static int scale = 2;
 
-    public static void Screenshot(CraftingTreeHelper.NodeInfo nodeInfo, Player player) {
+    public static void Screenshot(CraftingTreeHelper.NodeManager nodeManager, Player player) {
         try {
             int scale = 2;
             Minecraft minecraft = Minecraft.getInstance();
 
             Map<AEKey, Point>map = new HashMap<>();
 
-            BufferedImage image = new BufferedImage(nodeInfo.max_x() * 110, nodeInfo.max_y() * 110, 6);
+            BufferedImage image = new BufferedImage(nodeManager.max_x * 110, nodeManager.max_y * 110, 6);
             var graphics = image.createGraphics();
             graphics.setColor(Color.BLACK);
             graphics.setStroke(new BasicStroke(4));
             graphics.setBackground(Color.GRAY);
 
-            BufferedImage stackImage = init(nodeInfo, map);
+            BufferedImage stackImage = init(nodeManager.root, map);
 
-            draw(graphics, stackImage, nodeInfo.node(), map);
+            draw(graphics, stackImage, nodeManager.root, map);
 
 
             graphics.dispose();
@@ -69,11 +69,11 @@ public class ScreenshotHelper {
 
     }
 
-    private static BufferedImage init(CraftingTreeHelper.NodeInfo nodeInfo, Map<AEKey, Point> map) throws IOException {
+    private static BufferedImage init(CraftingTreeHelper.Node node, Map<AEKey, Point> map) throws IOException {
         Minecraft minecraft = Minecraft.getInstance();
 
         Set<AEKey> keys = new HashSet<>();
-        initNode(nodeInfo.node(), keys);
+        initNode(node, keys);
         int size = keys.size();
         int len = ((int) Math.sqrt(size)) + 1;
 
@@ -137,9 +137,9 @@ public class ScreenshotHelper {
     }
 
     private static void initNode(CraftingTreeHelper.Node node, Set<AEKey> set){
-        set.add(node.stack().what());
-        if(node.subNodes() != null){
-            for (var subNode : node.subNodes()){
+        set.add(node.stack.what());
+        if(node.subNodes != null){
+            for (var subNode : node.subNodes){
                 initNode(subNode, set);
             }
         }
@@ -149,18 +149,18 @@ public class ScreenshotHelper {
         int spacing = 110; // 88 + 22
         int output = 10;
         int stackLength = 44;
-        int x = node.position().x * spacing + output;
-        int y = node.position().y * spacing + output;
-        if(node.subNodes() != null) graphics.drawLine(x + stackLength, y + stackLength, x + stackLength, y + stackLength + spacing / 2);
+        int x = node.point.x * spacing + output;
+        int y = node.point.y * spacing + output;
+        if(!(node.subNodes == null || node.subNodes.isEmpty())) graphics.drawLine(x + stackLength, y + stackLength, x + stackLength, y + stackLength + spacing / 2);
 
-        Point pos = map.get(node.stack().what());
+        Point pos = map.get(node.stack.what());
         BufferedImage subImage = stackImage.getSubimage(pos.x * 88, pos.y * 88, 88, 88);
         graphics.drawImage(subImage, x, y, null);
 
-        if(node.subNodes() == null) return;
+        if(node.subNodes == null || node.subNodes.isEmpty()) return;
         Point last = new Point(0, 0);
-        for(var child : node.subNodes()){
-            var p = child.position();
+        for(var child : node.subNodes){
+            var p = child.point;
             var pX = p.x * spacing + output;
             var pY = p.y * spacing + output;
             graphics.drawLine(pX + stackLength, y + stackLength + spacing / 2, pX + stackLength, pY + stackLength);

@@ -37,7 +37,7 @@ public class AE2ct {
     public static final String MODID = "ae2ct";
 
     public AE2ct() {
-
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CONFIG);
     }
 
 }
