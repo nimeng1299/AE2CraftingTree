@@ -9,6 +9,7 @@ import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
+import com.neuvillette.ae2ct.Config;
 import com.neuvillette.ae2ct.api.CraftingTreeHelper;
 import com.neuvillette.ae2ct.api.RecipeHelper;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
@@ -28,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 public class CraftingTreeWidget {
     private RecipeHelper data;
     protected final AEBaseScreen<?> screen;
-    private CompletableFuture<CraftingTreeHelper.NodeInfo> future = null;
+    private CompletableFuture<CraftingTreeHelper.NodeManager> future = null;
     private CraftingTreeHelper helper;
     private int outputX = 20;
     private int outputY = 30;
@@ -40,7 +41,7 @@ public class CraftingTreeWidget {
         this.screen = screen;
         this.data = data;
         this.helper = new CraftingTreeHelper(data, entries);
-        this.future = CompletableFuture.supplyAsync(() -> helper.buildNode());
+        this.future = CompletableFuture.supplyAsync(() -> helper.build());
     }
 
 
@@ -55,11 +56,16 @@ public class CraftingTreeWidget {
         //AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, board.getX() + 10, board.getY() - 40 , output.what());
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
+        CraftingTreeHelper.NodeManager nodeManager = null;
         try {
             if (future.isDone()) {
-                var nodeInfo = future.get();
+                nodeManager = future.get();
+                if(Config.USE_COMPACT_TREE.get() != helper.now_mode)
+                {
+                    helper.buildNodePosition(nodeManager.root, nodeManager);
+                }
                 poseStack.scale(scroll, scroll, scroll);
-                drawNode(guiGraphics, nodeInfo.node());
+                drawNode(guiGraphics, nodeManager.root);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -67,19 +73,19 @@ public class CraftingTreeWidget {
         poseStack.popPose();
         guiGraphics.disableScissor();
         Point p = getMousePoint(guiGraphics, mouseX, mouseY);
-        if(this.helper.getNodesMap().containsKey(p)){
-            var node = this.helper.getNodesMap().get(p);
-            var stack = node.stack();
+        if(nodeManager != null && nodeManager.map.containsKey(p) && nodeManager.map.get(p) != null){
+            var node = nodeManager.map.get(p);
+            var stack = node.stack;
             var x = mouseX - screen.getGuiLeft() + 10;
             var y = mouseY - screen.getGuiTop() + 10;
-            var lines =AEKeyRendering.getTooltip(stack.what());
-            var a = node.amountHelper();
-            if(stack.what() == this.data.output.what()){
+            var lines = AEKeyRendering.getTooltip(stack.what());
+            var a = node.amountHelper;
+            if (stack.what() == this.data.output.what()) {
                 //output
-                lines.add(ToolTipText.OutputAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
-            }else if(node.subNodes() == null || node.subNodes().isEmpty()){
+                lines.add(ToolTipText.OutputAmount.text(stack.what().formatAmount(node.amount, AmountFormat.FULL)));
+            }else if(node.subNodes == null || node.subNodes.isEmpty()){
                 //input
-                lines.add(ToolTipText.InputAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
+                lines.add(ToolTipText.InputAmount.text(stack.what().formatAmount(node.amount, AmountFormat.FULL)));
                 lines.add(ToolTipText.Info.text());
                 if(a.storedAmount > 0)
                     lines.add(ToolTipText.StoredAmount.text(stack.what().formatAmount(a.storedAmount, AmountFormat.FULL)));
@@ -87,7 +93,7 @@ public class CraftingTreeWidget {
                     lines.add(ToolTipText.MissingAmount.text(stack.what().formatAmount(a.missingAmount, AmountFormat.FULL)));
             }else{
                 //midden
-                lines.add(ToolTipText.MiddenAmount.text(stack.what().formatAmount(node.amount(), AmountFormat.FULL)));
+                lines.add(ToolTipText.MiddenAmount.text(stack.what().formatAmount(node.amount, AmountFormat.FULL)));
                 lines.add(ToolTipText.Info.text());
                 if(a.storedAmount > 0)
                     lines.add(ToolTipText.StoredAmount.text(stack.what().formatAmount(a.storedAmount, AmountFormat.FULL)));
@@ -101,15 +107,15 @@ public class CraftingTreeWidget {
     }
 
     private void drawNode(GuiGraphics guiGraphics, CraftingTreeHelper.Node node){
-        var stack = node.stack();
+        var stack = node.stack;
         var color = FastColor.ARGB32.color(255, 0, 0, 0);
-        int x = node.position().x * spacingX + outputX;
-        int y = node.position().y * spacingY + outputY;
+        int x = node.point.x * spacingX + outputX;
+        int y = node.point.y * spacingY + outputY;
 
         if(x * scroll > screen.getGuiLeft() + screen.width + 10 || y * scroll > screen.getGuiTop() + screen.height + 10) return;
 
-        if(node.subNodes() != null) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
-        if(node.amountHelper().missingAmount <= 0) {
+        if(!(node.subNodes == null || node.subNodes.isEmpty())) guiGraphics.vLine(x + stackLength, y + stackLength, y + stackLength + spacingY / 2, color);
+        if(node.amountHelper.missingAmount <= 0) {
             guiGraphics.blit(ResourceLocation.fromNamespaceAndPath(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 0, 22, 22);
         }else{
             guiGraphics.blit(ResourceLocation.fromNamespaceAndPath(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 22, 22, 22);
@@ -127,10 +133,10 @@ public class CraftingTreeWidget {
 
         guiGraphics.drawString(font, getDrawAmount(node), (x + 18 - fontX * scale) / scale, (y + 18 - fontY * scale) / scale, color, false);
         poseStack.popPose();
-        if(node.subNodes() == null) return;
+        if(node.subNodes == null || node.subNodes.isEmpty()) return;
         Point last = new Point(0, 0);
-        for(var child : node.subNodes()){
-            var p = child.position();
+        for(var child : node.subNodes){
+            var p = child.point;
             var pX = p.x * spacingX + outputX;
             var pY = p.y * spacingY + outputY;
             guiGraphics.vLine(pX + stackLength, y + stackLength + spacingY / 2, pY + stackLength, color);
@@ -145,8 +151,8 @@ public class CraftingTreeWidget {
     public void screenShot(){
         try {
             if (future.isDone()) {
-                var nodeInfo = future.get();
-                ScreenshotHelper.Screenshot(nodeInfo, screen.getMenu().getPlayer());
+                var nodeManager  = future.get();
+                ScreenshotHelper.Screenshot(nodeManager, screen.getMenu().getPlayer());
             }else {
                 var player = screen.getMenu().getPlayer();
                 player.sendSystemMessage(Component.translatable("ae2ct.screenshot.noready"));
@@ -157,8 +163,8 @@ public class CraftingTreeWidget {
     }
 
     public static String getDrawAmount(CraftingTreeHelper.Node node){
-        var amount = node.amount();
-        if(node.stack().what() instanceof AEFluidKey){
+        var amount = node.amount;
+        if(node.stack.what() instanceof AEFluidKey){
             if (amount >= 1_000) {
                 return formatNumber(amount / 1_000.0) + "B";
             } else {

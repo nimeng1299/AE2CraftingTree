@@ -13,7 +13,10 @@ public enum ToolTipText implements LocalizationEnum {
     Info("info:"),
     CraftingAmount("Crafting: %s"),
     MissingAmount("Missing: %s"),
-    StoredAmount("Stored: %s")
+    StoredAmount("Stored: %s"),
+    Setting("Setting"),
+    UseCompactTreeCheckbox("use compact mode"),
+    ScreenShotShowCountCheckbox("ScreenShot show count"),
     ;
     private final String englishText;
 

@@ -2,6 +2,7 @@ package com.neuvillette.ae2ct;
 
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import org.slf4j.Logger;
 
@@ -21,6 +22,7 @@ public class AE2ct
     private static final Logger LOGGER = LogUtils.getLogger();
     public AE2ct(IEventBus modEventBus, ModContainer modContainer)
     {
+        modContainer.registerConfig(ModConfig.Type.CLIENT, Config.CONFIG);
     }
 
 }

@@ -1,0 +1,34 @@
+{
+  "$schema": "schema.json",
+  "includes": ["common.json"],
+  "generatedBackground": {
+    "width": 200,
+    "height": 216
+  },
+  "text": {
+    "dialog_title": {
+      "position": {
+        "left": 8,
+        "top": 7
+      },
+      "text": {
+        "translate": "gui.ae2ct.CraftingTreeSettingTitle"
+      }
+    }
+  },
+  "widgets": {
+    "back": {
+      "right": 22,
+      "top": 0
+    },
+    "useCompactTreeCheckbox": {
+      "left": 10,
+      "top": 25,
+      "width": 180
+    },"screenShotShowCountCheckbox": {
+      "left": 10,
+      "top": 50,
+      "width": 180
+    }
+  }
+}

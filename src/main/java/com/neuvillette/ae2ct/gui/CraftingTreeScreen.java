@@ -25,6 +25,7 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
          this.parent = parent;
          craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
          addBackButton();
+         this.addToLeftToolbar(new ChangeButton(this::changeSetting, Icon.COG, ToolTipText.Setting));
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));
 
     }
@@ -34,6 +35,11 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
         TabButton button = new TabButton(Icon.BACK, label, btn -> returnToParent());
         widgets.add("back", button);
     }
+
+    private void changeSetting(){
+        switchToScreen(new SettingScreen(this));
+    }
+
 
 
     @Override
