@@ -125,86 +125,40 @@ public class CraftingTreeHelper {
     }
 
     public int buildCompactNode(Node node, NodeManager manager, Point initialPoint) {
-        // 当前节点的最终位置
-        Point currentPos = new Point(initialPoint.x, initialPoint.y);
-        int totalShift = 0;
-
-        // 阶段1：确定当前节点初始位置（根节点直接设置）
-        if (!manager.root.equals(node)) {
-            // 非根节点寻找可用位置
-            while (manager.map.containsKey(currentPos)) {
-                currentPos.x++;
-                totalShift++;
-            }
-            updateNodePosition(node, manager, currentPos);
-        } else {
-            updateNodePosition(node, manager, currentPos);
+        int len = 0;
+        Point p = initialPoint;
+        while (manager.map.containsKey(p)){
+            len++;
+            p = new Point(p.x + 1, p.y);
         }
-
-        // 叶子节点直接返回
-        if (node.subNodes.isEmpty()) return totalShift;
-
-        // 阶段2：递归处理所有子节点
-        List<Point> childPositions = new ArrayList<>();
-        int maxChildShift = 0;
-
-        // 先处理所有子节点以收集最终位置
-        for (int i = 0; i < node.subNodes.size(); i++) {
-            Node child = node.subNodes.get(i);
-            Point childInitial = new Point(currentPos.x + i, currentPos.y + 1);
-            int childShift = buildCompactNode(child, manager, childInitial);
-
-            // 记录子节点最终位置
-            childPositions.add(child.point);
-            maxChildShift = Math.max(maxChildShift, childShift);
-        }
-
-        // 阶段3：根据第一个子节点调整父节点位置
-        if (!childPositions.isEmpty()) {
-            Point firstChildPos = childPositions.get(0);
-            Point targetParentPos = new Point(firstChildPos.x, currentPos.y);
-
-            // 解决父节点位置冲突
-            while (manager.map.containsKey(targetParentPos)) {
-                targetParentPos.x++;
-                totalShift++;
-            }
-
-            // 移动父节点到第一个子节点正上方
-            if (!targetParentPos.equals(currentPos)) {
-                updateNodePosition(node, manager, targetParentPos);
-                totalShift += (targetParentPos.x - currentPos.x);
-                currentPos = targetParentPos;
-            }
-
-            // 阶段4：重新排列子节点保持紧凑
-            int baseX = currentPos.x;
+        if(node.subNodes.isEmpty())
+        {
+            manager.nodeSetPoint(node, p);
+            return len;
+        }else {
+            int addlen = 0;
+            int start = 0;
+            int end = 0;
             for (int i = 0; i < node.subNodes.size(); i++) {
-                Node child = node.subNodes.get(i);
-                Point desiredPos = new Point(baseX + i, currentPos.y + 1);
-
-                // 仅当需要移动时才更新
-                if (!child.point.equals(desiredPos)) {
-                    // 释放旧位置
-                    manager.map.remove(child.point);
-                    // 确保新位置可用
-                    while (manager.map.containsKey(desiredPos)) {
-                        desiredPos.x++;
-                        totalShift++;
-                    }
-                    updateNodePosition(child, manager, desiredPos);
+                var subNode = node.subNodes.get(i);
+                addlen += buildCompactNode(subNode, manager, new Point(p.x + i, p.y + 1));
+                if(i == 0){
+                    p.x += addlen;
+                    start = subNode.point.x;
+                } else if (i == node.subNodes.size() - 1){
+                    end = subNode.point.x;
                 }
             }
-        }
 
-        return totalShift;
-    }
+            for(int i = start; i < end; i++){
+                if(!manager.map.containsKey(new Point(i, p.y + 1))){
+                    manager.map.put(new Point(i, p.y + 1), null);
+                }
+            }
 
-    private void updateNodePosition(Node node, NodeManager manager, Point newPos) {
-        if (node.point != null) {
-            manager.map.remove(node.point);
+            manager.nodeSetPoint(node, p);
+            return len;
         }
-        manager.nodeSetPoint(node, newPos);
     }
 
     public int bulidLooseNode(Node node, NodeManager manager, Point point, int len){

@@ -74,7 +74,7 @@ public class CraftingTreeWidget {
         poseStack.popPose();
         guiGraphics.disableScissor();
         Point p = getMousePoint(guiGraphics, mouseX, mouseY);
-        if (nodeManager != null && nodeManager.map.containsKey(p)) {
+        if (nodeManager != null && nodeManager.map.containsKey(p) && nodeManager.map.get(p) != null) {
             var node = nodeManager.map.get(p);
             var stack = node.stack;
             var x = mouseX - screen.getGuiLeft() + 10;

@@ -8,6 +8,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.neuvillette.ae2ct.AE2ct;
+import com.neuvillette.ae2ct.Config;
+import com.neuvillette.ae2ct.gui.CraftingTreeWidget;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -37,6 +39,7 @@ import static net.minecraft.client.Screenshot.takeScreenshot;
 
 public class ScreenshotHelper {
     private final static int scale = 2;
+    private final static Font font = new Font("Arial", Font.BOLD, 12);
 
     public static void Screenshot(CraftingTreeHelper.NodeManager nodeManager, Player player) {
         try {
@@ -47,9 +50,10 @@ public class ScreenshotHelper {
 
             BufferedImage image = new BufferedImage(nodeManager.max_x * 110, nodeManager.max_y * 110, 6);
             var graphics = image.createGraphics();
+            graphics.setFont(font);
             graphics.setColor(Color.BLACK);
             graphics.setStroke(new BasicStroke(4));
-            graphics.setBackground(Color.GRAY);
+
 
             BufferedImage stackImage = init(nodeManager.root, map);
 
@@ -156,6 +160,14 @@ public class ScreenshotHelper {
         Point pos = map.get(node.stack.what());
         BufferedImage subImage = stackImage.getSubimage(pos.x * 88, pos.y * 88, 88, 88);
         graphics.drawImage(subImage, x, y, null);
+        //draw count
+        if(Config.SCREENSHOT_SHOW_COUNT.get()){
+            String text = CraftingTreeWidget.getDrawAmount(node);
+            var fm = graphics.getFontMetrics();
+            int textWidth = fm.stringWidth(text);
+            int textHeight = fm.getHeight();
+            graphics.drawString(text, x + 80 - textWidth, y + 92 - textHeight);
+        }
 
         if(node.subNodes == null || node.subNodes.isEmpty()) return;
         Point last = new Point(0, 0);
