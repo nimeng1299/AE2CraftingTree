@@ -63,7 +63,7 @@ public class CraftingTreeHelper {
         }
         max_x = 0;
         max_y = 0;
-        var node = buildNode(output, amount, inputs, times, outputamount);
+        var node = buildNode(output, amount, inputs, times, outputamount, null);
         NodeManager nodeManager = new NodeManager(node);
         nodeManager.nodeSetPoint(node, new Point(0, 0));
         buildNodePosition(node, nodeManager);
@@ -81,9 +81,8 @@ public class CraftingTreeHelper {
         }
     }
 
-    public Node buildNode(GenericStack stack, Long amount, List<GenericStack> inputs, long times, long outputamount){
+    public Node buildNode(GenericStack stack, Long amount, List<GenericStack> inputs, long times, long outputamount, Node parent){
         if(cache == null || cache.isEmpty() || amountCache == null || amountCache.isEmpty()) return null;
-        List<Node> nodes = new ArrayList<>();
         var amoCache = amountCache.get(stack.what());
         if(amoCache == null) amoCache = new AmountHelper(0, Long.MAX_VALUE, Long.MAX_VALUE);
         if(inputs.isEmpty()){
@@ -91,6 +90,7 @@ public class CraftingTreeHelper {
             AmountHelper a = new AmountHelper(AmountHelper.check(amount - storedAmo), storedAmo, 0);
             amountCache.put(stack.what(), new AmountHelper(AmountHelper.check(amoCache.missingAmount - amount), amoCache.storedAmount, amoCache.craftAmount));
             Node n =  new Node(stack, amount, a);
+            n.parent = parent;
             return n;
         }
         if(times == 0)
@@ -98,8 +98,10 @@ public class CraftingTreeHelper {
             AmountHelper a = new AmountHelper(0, amount, 0);
             amountCache.put(stack.what(), new AmountHelper(amoCache.missingAmount, AmountHelper.check(amoCache.storedAmount - amount), amoCache.craftAmount));
             Node n =  new Node(stack, amount, a);
+            n.parent = parent;
             return n;
         }
+        Node n = new Node(stack, amount, new AmountHelper(0, AmountHelper.check(amount - times * outputamount), times * outputamount));
         for(var input : inputs){
             var amo = input.amount() * times;
             long t = 0;
@@ -117,10 +119,10 @@ public class CraftingTreeHelper {
                     break;
                 }
             }
-            Node n = buildNode(input, amo, ins, t, a);
-            nodes.add(n);
+            Node node = buildNode(input, amo, ins, t, a, n);
+            n.subNodes.add(node);
         }
-        Node n = new Node(stack, amount, new AmountHelper(0, AmountHelper.check(amount - times * outputamount), times * outputamount), nodes);
+        n.parent = parent;
         return n;
     }
 
@@ -208,6 +210,7 @@ public class CraftingTreeHelper {
 
         public Point point;
         public List<Node> subNodes;
+        public Node parent;
 
         public Node(GenericStack stack, Long amount, AmountHelper amountHelper){
             this.stack = stack;
