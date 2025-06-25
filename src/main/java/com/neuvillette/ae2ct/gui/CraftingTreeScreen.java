@@ -7,6 +7,7 @@ import appeng.client.gui.me.crafting.CraftConfirmScreen;
 import appeng.client.gui.widgets.TabButton;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.neuvillette.ae2ct.api.ICraftingPlanSummary;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
@@ -63,5 +64,14 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
     public boolean mouseClicked(double xCoord, double yCoord, int btn) {
         craftingTreeWidget.mouseClicked(xCoord, yCoord, btn);
         return super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputConstants.KEY_ESCAPE) {
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        craftingTreeWidget.keyPressed(keyCode, scanCode, modifiers);
+        return true;
     }
 }

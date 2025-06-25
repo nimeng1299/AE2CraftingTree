@@ -6,6 +6,7 @@ import appeng.api.stacks.AmountFormat;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
@@ -37,6 +38,11 @@ public class CraftingTreeWidget {
     private int spacingY = 30;
     private int stackLength = 8;
     private float scroll = 1.0f;
+
+    // Invariance: (selectedNode != null) implies (selectedNode.parent == null ||
+    // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)Add commentMore actions
+    private CraftingTreeHelper.Node selectedNode = null;
+    private int selectedNodeIdx = 0;
     public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data, List<CraftingPlanSummaryEntry> entries) {
         this.screen = screen;
         this.data = data;
@@ -251,6 +257,79 @@ public class CraftingTreeWidget {
         }
         catch (Exception e){
             return new Point(-1, -1);
+        }
+    }
+    private CraftingTreeHelper.Node getSelectedNode(CraftingTreeHelper.NodeManager manager) {
+        if (selectedNode == null) {
+            // manager.root.parent == null
+            selectedNode = manager.root;
+        }
+
+        return selectedNode;
+    }
+
+    // set current postion to selected node
+    private void updatePosition() {
+        if (selectedNode != null) {
+            outputX = 20 - selectedNode.point.x * spacingX;
+            outputY = 30 - selectedNode.point.y * spacingY;
+        }
+    }
+
+    // left/right jumps between sibling nodes and up/down jumps between parent and
+    // first child node
+    public void keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (future.isDone()) {
+            try {
+                var nodeManager = future.get();
+                switch (keyCode) {
+                    case InputConstants.KEY_RIGHT: {
+                        var p = getSelectedNode(nodeManager).parent;
+                        if (p != null && selectedNodeIdx + 1 < p.subNodes.size()) {
+                            selectedNodeIdx += 1;
+                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                            selectedNode = p.subNodes.get(selectedNodeIdx);
+                        }
+                        updatePosition();
+                        break;
+                    }
+                    case InputConstants.KEY_LEFT: {
+                        var p = getSelectedNode(nodeManager).parent;
+                        if (p != null && selectedNodeIdx > 0) {
+                            selectedNodeIdx -= 1;
+                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                            selectedNode = p.subNodes.get(selectedNodeIdx);
+                        }
+                        updatePosition();
+                        break;
+                    }
+                    case InputConstants.KEY_UP: {
+                        var p = getSelectedNode(nodeManager).parent;
+                        if (p != null) {
+                            selectedNode = p;
+                            if (selectedNode.parent != null) {
+                                // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                                selectedNodeIdx = selectedNode.parent.subNodes.indexOf(selectedNode);
+                            }
+                        }
+                        updatePosition();
+                        break;
+                    }
+                    case InputConstants.KEY_DOWN: {
+                        var node = getSelectedNode(nodeManager);
+                        if (!node.subNodes.isEmpty()) {
+                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                            selectedNode = node.subNodes.get(0);
+                            selectedNodeIdx = 0;
+                        }
+                        updatePosition();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+            }
         }
     }
 }
