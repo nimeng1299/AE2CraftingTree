@@ -22,6 +22,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 
@@ -44,12 +46,14 @@ import static net.minecraft.client.Screenshot.takeScreenshot;
 public class ScreenshotHelper {
     private final static int scale = 2;
     private final static Font font = new Font("Arial", Font.BOLD, 12);
+    private static final Logger LOGGER = LogManager.getLogger();
     public static void Screenshot(CraftingTreeHelper.NodeManager nodeManager, Player player) {
         try {
             Minecraft minecraft = Minecraft.getInstance();
 
             Map<AEKey, Point> map = new HashMap<>();
 
+            LOGGER.info("Screenshot:{}, width:{}, height:{}", nodeManager.len, (long)nodeManager.max_x * 110L, (long)nodeManager.max_y * 110L);
             BufferedImage image = new BufferedImage(nodeManager.max_x * 110, nodeManager.max_y * 110, 6);
             var graphics = image.createGraphics();
             graphics.setFont(font);
@@ -69,6 +73,7 @@ public class ScreenshotHelper {
         }
         catch (Exception e)
         {
+            LOGGER.error("Error：", e);
             player.sendSystemMessage(Component.translatable("ae2ct.screenshot.exception", e.toString()));
         }
 

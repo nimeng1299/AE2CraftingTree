@@ -54,7 +54,7 @@ public class CraftingTreeWidget {
     public void draw(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY){
         var color = FastColor.ARGB32.color(100, 114, 114, 114);
 
-        var board =  new Rect2i(screen.getGuiLeft() + 10 , screen.getGuiTop() + 20, 180, 180);
+        var board =  new Rect2i(screen.getGuiLeft() + 10 , screen.getGuiTop() + 20, 330, 190);
         guiGraphics.enableScissor(board.getX(), board.getY(), board.getX() + board.getWidth(), board.getY() + board.getHeight());
         //guiGraphics.fill(0, 0, 30000, 30000, color);
 
@@ -198,7 +198,7 @@ public class CraftingTreeWidget {
 
 
     private Rect2i getArea(){
-        return new Rect2i(10, 20, 200, 190);
+        return new Rect2i(10, 20, 330, 190);
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
