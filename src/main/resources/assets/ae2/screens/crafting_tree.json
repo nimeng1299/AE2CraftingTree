@@ -2,8 +2,8 @@
   "$schema": "schema.json",
   "includes": ["common.json"],
   "generatedBackground": {
-    "width": 200,
-    "height": 216
+    "width": 350,
+    "height": 250
   },
   "text": {
     "dialog_title": {
