@@ -11,5 +11,6 @@
   "gui.ae2ct.Screenshot": "スクリーンショット",
   "ae2ct.screenshot.noready": "スクリーンショットの準備ができていないので、後でもう一度お試しください。",
   "ae2ct.screenshot.exception": "スクリーンショットが失敗しました。理由: %s",
-  "ae2ct.openscreen.plannull": "クラフト確認計算の完了を待っています"
+  "ae2ct.openscreen.plannull": "クラフト確認計算の完了を待っています",
+  "gui.ae2ct.ShowMissingOnly": "欠落しているもののみ表示"
 }

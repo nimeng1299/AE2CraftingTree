@@ -25,7 +25,7 @@ public class CraftingTreeHelper {
         this.entries = entries;
     }
 
-    public NodeManager build(){
+    public NodeManager build(boolean isMissingOnly){
         if (recipeHelper == null) return null;
 
         cache.clear();
@@ -65,9 +65,31 @@ public class CraftingTreeHelper {
         max_y = 0;
         var node = buildNode(output, amount, inputs, times, outputamount, null);
         NodeManager nodeManager = new NodeManager(node);
+        if(isMissingOnly) missingOnly(node);
         nodeManager.nodeSetPoint(node, new Point(0, 0));
         buildNodePosition(node, nodeManager);
         return nodeManager;
+    }
+
+    private static Node missingOnly(Node node){
+        if(node == null) {
+            return null;
+        }
+
+        List<Node> newSubNodes = new ArrayList<>();
+        for(Node subNode : node.subNodes) {
+            Node newSubNode = missingOnly(subNode);
+            if(newSubNode != null) {
+                newSubNodes.add(newSubNode);
+            }
+        }
+        node.subNodes = newSubNodes;
+
+        if (node.amountHelper.missingAmount <= 0 && node.subNodes.isEmpty()) {
+            return null;
+        }
+
+        return node;
     }
 
     public void buildNodePosition(Node node, NodeManager nodeManager){

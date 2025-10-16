@@ -31,6 +31,7 @@ public class CraftingTreeWidget {
     private RecipeHelper data;
     protected final AEBaseScreen<?> screen;
     private CompletableFuture<CraftingTreeHelper.NodeManager> future = null;
+    protected boolean isMissingOnly = false;
     private CraftingTreeHelper helper;
     private int outputX = 20;
     private int outputY = 30;
@@ -44,11 +45,12 @@ public class CraftingTreeWidget {
     private CraftingTreeHelper.Node selectedNode = null;
     private int selectedNodeIdx = 0;
 
-    public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data, List<CraftingPlanSummaryEntry> entries) {
+    public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data, List<CraftingPlanSummaryEntry> entries, boolean isMissingOnly) {
         this.screen = screen;
         this.data = data;
         this.helper = new CraftingTreeHelper(data, entries);
-        this.future = CompletableFuture.supplyAsync(() -> helper.build());
+        this.future = CompletableFuture.supplyAsync(() -> helper.build(isMissingOnly));
+        this.isMissingOnly = isMissingOnly;
     }
 
 
