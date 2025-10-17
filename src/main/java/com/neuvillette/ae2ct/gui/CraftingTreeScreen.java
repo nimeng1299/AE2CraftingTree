@@ -22,10 +22,11 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
 
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
-         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
+         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries(), false);
          addBackButton();
          this.addToLeftToolbar(new ChangeButton(this::changeSetting, Icon.WRENCH, ToolTipText.Setting));
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));
+         this.addToLeftToolbar(new ChangeButton(this::showMissingOnly, Icon.INVALID, ToolTipText.ShowMissingOnlY));
     }
 
     private void addBackButton() {
@@ -34,6 +35,12 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
          ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
          TabButton button = new TabButton(icon, label, btn -> returnToParent());
          widgets.add("back", button);
+    }
+
+    private void showMissingOnly() {
+        if(craftingTreeWidget == null) return;
+        craftingTreeWidget.isMissingOnly = !craftingTreeWidget.isMissingOnly;
+        craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary) menu.getPlan()).getJob(), menu.getPlan().getEntries(), craftingTreeWidget.isMissingOnly);
     }
 
     private void changeSetting(){
