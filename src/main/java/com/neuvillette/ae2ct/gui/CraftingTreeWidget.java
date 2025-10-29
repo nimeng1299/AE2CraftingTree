@@ -16,6 +16,7 @@ import com.neuvillette.ae2ct.api.CraftingTreeHelper;
 import com.neuvillette.ae2ct.api.RecipeHelper;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
+import com.neuvillette.ae2ct.api.jei.JeiItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
@@ -39,6 +40,8 @@ public class CraftingTreeWidget {
     private int spacingY = 30;
     private int stackLength = 8;
     private float scroll = 1.0f;
+
+    private CraftingTreeHelper.NodeManager _nodeManager = null;
 
     // Invariance: (selectedNode != null) implies (selectedNode.parent == null ||
     // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
@@ -69,6 +72,7 @@ public class CraftingTreeWidget {
         try {
             if (future.isDone()) {
                 nodeManager = future.get();
+                _nodeManager = nodeManager;
                 if(Config.USE_COMPACT_TREE.get() != helper.now_mode)
                 {
                     helper.buildNodePosition(nodeManager.root, nodeManager);
@@ -83,7 +87,7 @@ public class CraftingTreeWidget {
         }
         poseStack.popPose();
         guiGraphics.disableScissor();
-        Point p = getMousePoint(guiGraphics, mouseX, mouseY);
+        Point p = getMousePoint(mouseX, mouseY);
         if (nodeManager != null && nodeManager.map.containsKey(p) && nodeManager.map.get(p) != null) {
             var node = nodeManager.map.get(p);
             var stack = node.stack;
@@ -229,7 +233,19 @@ public class CraftingTreeWidget {
     }
 
     public boolean mouseClicked(double xCoord, double yCoord, int btn) {
-        if(btn == 2){
+        if((btn == 0 ||btn ==1) && !isMouseOutScreen(xCoord, yCoord)) {
+            Point p = getMousePoint(xCoord, yCoord);
+            if (_nodeManager != null && _nodeManager.map.containsKey(p) && _nodeManager.map.get(p) != null){
+                var node = _nodeManager.map.get(p);
+                var stack = node.stack;
+                if (btn == 0)
+                    JeiItem.openRecipe(stack, true);
+                else
+                    JeiItem.openRecipe(stack,false);
+            }
+
+        }
+        else if(btn == 2){
             scroll = 1.0f;
             outputX = 20;
             outputY = 30;
@@ -243,7 +259,7 @@ public class CraftingTreeWidget {
         return false;
     }
 
-    private Point getMousePoint(GuiGraphics guiGraphics, double mouseX, double mouseY){
+    private Point getMousePoint(double mouseX, double mouseY){
         try {
             if (isMouseOutScreen(mouseX, mouseY)) return new Point(-1, -1);
             int x = (int) (mouseX - screen.getGuiLeft() - outputX * scroll);

@@ -3,6 +3,7 @@ package com.neuvillette.ae2ct;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -38,6 +39,10 @@ public class AE2ct {
 
     public AE2ct() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CONFIG);
+    }
+
+    public static ResourceLocation id(String path) {
+        return new ResourceLocation(MODID, path);
     }
 
 }
