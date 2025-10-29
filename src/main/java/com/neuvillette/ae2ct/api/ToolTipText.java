@@ -17,7 +17,8 @@ public enum ToolTipText implements LocalizationEnum {
     Setting("Setting"),
     UseCompactTreeCheckbox("use compact mode"),
     ScreenShotShowCountCheckbox("ScreenShot show count"),
-    ShowMissingOnlY("Show missing only");
+    ShowMissingOnly("Show missing only"),
+    ShowMissingOnlyByDefault("Show missing only by default"),
     ;
     private final String englishText;
 
