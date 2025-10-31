@@ -8,6 +8,7 @@ import appeng.client.gui.widgets.TabButton;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.neuvillette.ae2ct.Config;
 import com.neuvillette.ae2ct.api.ICraftingPlanSummary;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
@@ -18,17 +19,17 @@ import java.awt.*;
 import java.util.List;
 
 public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfirmScreen> {
-    private final CraftingTreeWidget craftingTreeWidget;
+    private CraftingTreeWidget craftingTreeWidget;
     private final CraftConfirmScreen parent;
 
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
          this.parent = parent;
-         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries());
+         craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary)parent.getMenu().getPlan()).getJob(), parent.getMenu().getPlan().getEntries(), Config.SHOW_MISSING_ONLY_BY_DEFAULT.get());
          addBackButton();
          this.addToLeftToolbar(new ChangeButton(this::changeSetting, Icon.COG, ToolTipText.Setting));
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));
-
+         this.addToLeftToolbar(new ChangeButton(this::showMissingOnly, Icon.INVALID, ToolTipText.ShowMissingOnly));
     }
 
     private void addBackButton() {
@@ -36,6 +37,13 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
         TabButton button = new TabButton(Icon.BACK, label, btn -> returnToParent());
         widgets.add("back", button);
     }
+
+    private void showMissingOnly() {
+        if(craftingTreeWidget == null) return;
+        craftingTreeWidget.isMissingOnly = !craftingTreeWidget.isMissingOnly;
+        craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary) menu.getPlan()).getJob(), menu.getPlan().getEntries(), craftingTreeWidget.isMissingOnly);
+    }
+
 
     private void changeSetting(){
         switchToScreen(new SettingScreen(this));

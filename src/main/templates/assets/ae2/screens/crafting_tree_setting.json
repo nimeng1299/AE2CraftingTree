@@ -29,6 +29,10 @@
       "left": 10,
       "top": 50,
       "width": 180
+    },"showMissingOnlyByDefaultCheckbox": {
+      "left": 10,
+      "top": 75,
+      "width": 180
     }
   }
 }

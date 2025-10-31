@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 public class SettingScreen extends AESubScreen<CraftConfirmMenu, CraftingTreeScreen> {
     private final AECheckbox useCompactTreeCheckbox;
     private final AECheckbox screenShotShowCountCheckbox;
+    private final AECheckbox showMissingOnlyByDefaultCheckbox;
 
     public SettingScreen(CraftingTreeScreen parent) {
         super(parent, "/screens/crafting_tree_setting.json");
@@ -20,6 +21,7 @@ public class SettingScreen extends AESubScreen<CraftConfirmMenu, CraftingTreeScr
 
         this.useCompactTreeCheckbox = this.widgets.addCheckbox("useCompactTreeCheckbox", ToolTipText.UseCompactTreeCheckbox.text(), this::save);
         this.screenShotShowCountCheckbox = this.widgets.addCheckbox("screenShotShowCountCheckbox", ToolTipText.ScreenShotShowCountCheckbox.text(), this::save);
+        this.showMissingOnlyByDefaultCheckbox = this.widgets.addCheckbox("showMissingOnlyByDefaultCheckbox", ToolTipText.ShowMissingOnlyByDefault.text(), this::save);
         updateState();
     }
 
@@ -34,12 +36,13 @@ public class SettingScreen extends AESubScreen<CraftConfirmMenu, CraftingTreeScr
     private void updateState(){
         this.useCompactTreeCheckbox.setSelected(Config.USE_COMPACT_TREE.get());
         this.screenShotShowCountCheckbox.setSelected(Config.SCREENSHOT_SHOW_COUNT.get());
-
+        this.showMissingOnlyByDefaultCheckbox.setSelected(Config.SHOW_MISSING_ONLY_BY_DEFAULT.get());
     }
 
     private void save(){
         Config.USE_COMPACT_TREE.set(this.useCompactTreeCheckbox.isSelected());
         Config.SCREENSHOT_SHOW_COUNT.set(this.screenShotShowCountCheckbox.isSelected());
+        Config.SHOW_MISSING_ONLY_BY_DEFAULT.set(this.showMissingOnlyByDefaultCheckbox.isSelected());
         Config.save();
         updateState();
     }
