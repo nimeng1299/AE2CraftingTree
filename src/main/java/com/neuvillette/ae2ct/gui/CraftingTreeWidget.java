@@ -4,11 +4,9 @@ import appeng.api.client.AEKeyRendering;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AmountFormat;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
 import com.neuvillette.ae2ct.Config;
@@ -16,7 +14,7 @@ import com.neuvillette.ae2ct.api.CraftingTreeHelper;
 import com.neuvillette.ae2ct.api.RecipeHelper;
 import com.neuvillette.ae2ct.api.ScreenshotHelper;
 import com.neuvillette.ae2ct.api.ToolTipText;
-import com.neuvillette.ae2ct.api.jei.JeiItem;
+import com.neuvillette.ae2ct.api.xei.Base;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
@@ -239,9 +237,9 @@ public class CraftingTreeWidget {
                 var node = _nodeManager.map.get(p);
                 var stack = node.stack;
                 if (btn == 0)
-                    JeiItem.openRecipe(stack, true);
+                    Base.openRecipe(stack, true);
                 else
-                    JeiItem.openRecipe(stack,false);
+                    Base.openRecipe(stack,false);
             }
 
         }
