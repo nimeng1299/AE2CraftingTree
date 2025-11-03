@@ -1,4 +1,4 @@
-package com.neuvillette.ae2ct.api.jei;
+package com.neuvillette.ae2ct.api.xei.jei;
 
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
