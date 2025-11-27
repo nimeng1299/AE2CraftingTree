@@ -72,6 +72,7 @@ public class CraftingTreeWidget {
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
         updateNodeManager();
+        updateSearch();
         if(nodeManager != null) {
             if (Config.USE_COMPACT_TREE.get() != helper.now_mode) {
                 helper.buildNodePosition(nodeManager.root, nodeManager);
@@ -343,7 +344,6 @@ public class CraftingTreeWidget {
         outputX = 20;
         outputY = 30;
         updateNodeManager();
-        updateSearch();
     }
 
     public void updateNodeManager() {
@@ -357,7 +357,6 @@ public class CraftingTreeWidget {
     public void setSearchString(String searchString) {
         helper.setSearchString(searchString);
         if(searchString.isEmpty()) currentMatchNode = null;
-        updateSearch();
     }
 
     public void updateSearch() {
