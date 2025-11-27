@@ -4,11 +4,9 @@ import appeng.api.client.AEKeyRendering;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AmountFormat;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.neuvillette.ae2ct.AE2ct;
 import com.neuvillette.ae2ct.Config;
@@ -32,7 +30,8 @@ public class CraftingTreeWidget {
     protected final AEBaseScreen<?> screen;
     private CompletableFuture<CraftingTreeHelper.NodeManager> future = null;
     protected boolean isMissingOnly = false;
-    private CraftingTreeHelper helper;
+    private final CraftingTreeHelper helper;
+    private CraftingTreeHelper.NodeManager nodeManager;
     private int outputX = 20;
     private int outputY = 30;
     private int spacingX = 30;
@@ -45,11 +44,18 @@ public class CraftingTreeWidget {
     private CraftingTreeHelper.Node selectedNode = null;
     private int selectedNodeIdx = 0;
 
+    private List<CraftingTreeHelper.Node> cache = null;
+    private CraftingTreeHelper.Node currentMatchNode = null;
+    private int currentMatchIdx = 0;
+
     public CraftingTreeWidget(AEBaseScreen<?> screen, RecipeHelper data, List<CraftingPlanSummaryEntry> entries, boolean isMissingOnly) {
         this.screen = screen;
         this.data = data;
         this.helper = new CraftingTreeHelper(data, entries);
-        this.future = CompletableFuture.supplyAsync(() -> helper.build(isMissingOnly));
+        this.future = CompletableFuture.supplyAsync(() -> {
+            helper.preBuild();
+            return helper.build(isMissingOnly);
+        });
         this.isMissingOnly = isMissingOnly;
     }
 
@@ -65,21 +71,15 @@ public class CraftingTreeWidget {
         //AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, board.getX() + 10, board.getY() - 40 , output.what());
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
-        CraftingTreeHelper.NodeManager nodeManager = null;
-        try {
-            if (future.isDone()) {
-                nodeManager = future.get();
-                if(Config.USE_COMPACT_TREE.get() != helper.now_mode)
-                {
-                    helper.buildNodePosition(nodeManager.root, nodeManager);
-                }
-                poseStack.scale(scroll, scroll, scroll);
-                drawNode(guiGraphics, nodeManager.root);
-            }else{
-                return;
+        updateNodeManager();
+        if(nodeManager != null) {
+            if (Config.USE_COMPACT_TREE.get() != helper.now_mode) {
+                helper.buildNodePosition(nodeManager.root, nodeManager);
             }
-        }catch (Exception e){
-            e.printStackTrace();
+            poseStack.scale(scroll, scroll, scroll);
+            drawNode(guiGraphics, nodeManager.root);
+        } else {
+            return;
         }
         poseStack.popPose();
         guiGraphics.disableScissor();
@@ -131,6 +131,13 @@ public class CraftingTreeWidget {
         }else{
             guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 22, 22, 22);
         }
+
+        if(node == currentMatchNode) {
+            guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 44, 22, 22);
+        } else if(cache != null && cache.contains(node)) {
+            guiGraphics.blit(ResourceLocation.tryBuild(AE2ct.MODID, "icon.png"), x - 3, y - 3, 0, 66, 22, 22);
+        }
+
         AEKeyRendering.drawInGui(Minecraft.getInstance(), guiGraphics, x, y, stack.what());
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
@@ -160,16 +167,11 @@ public class CraftingTreeWidget {
     }
 
     public void screenShot(){
-        try {
-            if (future.isDone()) {
-                var nodeManager = future.get();
-                ScreenshotHelper.Screenshot(nodeManager, screen.getMenu().getPlayer());
-            }else {
-                var player = screen.getMenu().getPlayer();
-                player.sendSystemMessage(Component.translatable("ae2ct.screenshot.noready"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (future.isDone()) {
+            ScreenshotHelper.Screenshot(nodeManager, screen.getMenu().getPlayer());
+        }else {
+            var player = screen.getMenu().getPlayer();
+            player.sendSystemMessage(Component.translatable("ae2ct.screenshot.noready"));
         }
     }
 
@@ -284,57 +286,95 @@ public class CraftingTreeWidget {
     // left/right jumps between sibling nodes and up/down jumps between parent and
     // first child node
     public void keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (future.isDone()) {
-            try {
-                var nodeManager = future.get();
-                switch (keyCode) {
-                    case InputConstants.KEY_RIGHT: {
-                        var p = getSelectedNode(nodeManager).parent;
-                        if (p != null && selectedNodeIdx + 1 < p.subNodes.size()) {
-                            selectedNodeIdx += 1;
-                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
-                            selectedNode = p.subNodes.get(selectedNodeIdx);
-                        }
-                        updatePosition();
-                        break;
-                    }
-                    case InputConstants.KEY_LEFT: {
-                        var p = getSelectedNode(nodeManager).parent;
-                        if (p != null && selectedNodeIdx > 0) {
-                            selectedNodeIdx -= 1;
-                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
-                            selectedNode = p.subNodes.get(selectedNodeIdx);
-                        }
-                        updatePosition();
-                        break;
-                    }
-                    case InputConstants.KEY_UP: {
-                        var p = getSelectedNode(nodeManager).parent;
-                        if (p != null) {
-                            selectedNode = p;
-                            if (selectedNode.parent != null) {
-                                // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
-                                selectedNodeIdx = selectedNode.parent.subNodes.indexOf(selectedNode);
-                            }
-                        }
-                        updatePosition();
-                        break;
-                    }
-                    case InputConstants.KEY_DOWN: {
-                        var node = getSelectedNode(nodeManager);
-                        if (!node.subNodes.isEmpty()) {
-                            // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
-                            selectedNode = node.subNodes.get(0);
-                            selectedNodeIdx = 0;
-                        }
-                        updatePosition();
-                        break;
-                    }
-                    default:
-                        break;
+        switch (keyCode) {
+            case InputConstants.KEY_RIGHT: {
+                var p = getSelectedNode(nodeManager).parent;
+                if (p != null && selectedNodeIdx + 1 < p.subNodes.size()) {
+                    selectedNodeIdx += 1;
+                    // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                    selectedNode = p.subNodes.get(selectedNodeIdx);
                 }
-            } catch (Exception e) {
+                updatePosition();
+                break;
             }
+            case InputConstants.KEY_LEFT: {
+                var p = getSelectedNode(nodeManager).parent;
+                if (p != null && selectedNodeIdx > 0) {
+                    selectedNodeIdx -= 1;
+                    // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                    selectedNode = p.subNodes.get(selectedNodeIdx);
+                }
+                updatePosition();
+                break;
+            }
+            case InputConstants.KEY_UP: {
+                var p = getSelectedNode(nodeManager).parent;
+                if (p != null) {
+                    selectedNode = p;
+                    if (selectedNode.parent != null) {
+                        // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                        selectedNodeIdx = selectedNode.parent.subNodes.indexOf(selectedNode);
+                    }
+                }
+                updatePosition();
+                break;
+            }
+            case InputConstants.KEY_DOWN: {
+                var node = getSelectedNode(nodeManager);
+                if (!node.subNodes.isEmpty()) {
+                    // selectedNode.parent.subNodes.get(selectedNodeIdx) == selectedNode)
+                    selectedNode = node.subNodes.get(0);
+                    selectedNodeIdx = 0;
+                }
+                updatePosition();
+                break;
+            }
+            default:
+                break;
         }
+    }
+
+    public void reBuild() {
+        this.future = future.thenApplyAsync(nodeManager -> helper.build(isMissingOnly));
+        selectedNode = null;
+        selectedNodeIdx = 0;
+        currentMatchNode = null;
+        currentMatchIdx = 0;
+        outputX = 20;
+        outputY = 30;
+        updateNodeManager();
+        updateSearch();
+    }
+
+    public void updateNodeManager() {
+        if(future.isDone()) {
+            try {
+                nodeManager = future.get();
+            } catch(Exception ignored) {}
+        }
+    }
+
+    public void setSearchString(String searchString) {
+        helper.setSearchString(searchString);
+        if(searchString.isEmpty()) currentMatchNode = null;
+        updateSearch();
+    }
+
+    public void updateSearch() {
+        cache = helper.search(nodeManager.root);
+        if(cache == null || cache.isEmpty()) {
+            currentMatchNode = null;
+            return;
+        }
+        currentMatchNode = cache.get(0);
+    }
+
+    // Buttons' updatePosition
+    public void matchSwitch(boolean next) {
+        if(cache == null || cache.isEmpty()) return;
+        currentMatchIdx += (next ? 1 : -1);
+        currentMatchNode = cache.get(currentMatchIdx % cache.size());
+        outputX = 20 - currentMatchNode.point.x * spacingX;
+        outputY = 30 - currentMatchNode.point.y * spacingY;
     }
 }
