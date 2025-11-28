@@ -4,7 +4,9 @@ import appeng.client.gui.AESubScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.crafting.CraftConfirmScreen;
 
+import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.TabButton;
+import appeng.core.localization.GuiText;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 
@@ -14,12 +16,19 @@ import com.neuvillette.ae2ct.api.ICraftingPlanSummary;
 import com.neuvillette.ae2ct.api.ToolTipText;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
+
 import java.util.List;
 
 public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfirmScreen> {
-    private  CraftingTreeWidget craftingTreeWidget;
+    private final CraftingTreeWidget craftingTreeWidget;
+    private final AETextField searchField;
+    private static final Component PRE = Component.literal("<");
+    private static final Component NXT = Component.literal(">");
+    private Button[] btns = new Button[2];
 
      public CraftingTreeScreen(CraftConfirmScreen parent) {
          super(parent, "/screens/crafting_tree.json");
@@ -28,6 +37,17 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
          this.addToLeftToolbar(new ChangeButton(this::changeSetting, Icon.WRENCH, ToolTipText.Setting));
          this.addToLeftToolbar(new ChangeButton(craftingTreeWidget::screenShot, Icon.STORAGE_FILTER_EXTRACTABLE_ONLY, ToolTipText.Screenshot));
          this.addToLeftToolbar(new ChangeButton(this::showMissingOnly, Icon.INVALID, ToolTipText.ShowMissingOnly));
+
+         searchField = widgets.addTextField("searchField");
+         searchField.setPlaceholder(GuiText.SearchPlaceholder.text());
+         searchField.setResponder(this::setSearchText);
+
+         btns[0] = widgets.addButton("pre", PRE, action -> {
+             craftingTreeWidget.matchSwitch(false);
+         });
+         btns[1] = widgets.addButton("nxt", NXT, action -> {
+             craftingTreeWidget.matchSwitch(true);
+         });
     }
 
     private void addBackButton() {
@@ -41,13 +61,21 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
     private void showMissingOnly() {
         if(craftingTreeWidget == null) return;
         craftingTreeWidget.isMissingOnly = !craftingTreeWidget.isMissingOnly;
-        craftingTreeWidget = new CraftingTreeWidget(this, ((ICraftingPlanSummary) menu.getPlan()).getJob(), menu.getPlan().getEntries(), craftingTreeWidget.isMissingOnly);
+        craftingTreeWidget.reBuild();
     }
 
     private void changeSetting(){
             switchToScreen(new SettingScreen(this));
     }
 
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+
+        searchField.render(guiGraphics, mouseX, mouseY, partialTicks);
+        btns[0].render(guiGraphics, mouseX, mouseY, partialTicks);
+        btns[1].render(guiGraphics, mouseX, mouseY, partialTicks);
+    }
 
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
@@ -69,15 +97,41 @@ public class CraftingTreeScreen extends AESubScreen<CraftConfirmMenu, CraftConfi
     @Override
     public boolean mouseClicked(double xCoord, double yCoord, int btn) {
         craftingTreeWidget.mouseClicked(xCoord, yCoord, btn);
+
+        if(searchField.isMouseOver(xCoord, yCoord) && btn == 1) {
+            searchField.setValue("");
+            setSearchText("");
+        }
+
         return super.mouseClicked(xCoord, yCoord, btn);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputConstants.KEY_ESCAPE) {
+        if (keyCode == InputConstants.KEY_ESCAPE || keyCode == InputConstants.KEY_BACKSPACE) {
             return super.keyPressed(keyCode, scanCode, modifiers);
         }
+
+        if(searchField.isFocused() && keyCode == GLFW.GLFW_KEY_ENTER) {
+            searchField.setFocused(false);
+            return true;
+        }
+
         craftingTreeWidget.keyPressed(keyCode, scanCode, modifiers);
         return true;
+    }
+
+    @Override
+    public boolean charTyped(char character, int modifiers) {
+        if (character == ' ' && this.searchField.getValue().isEmpty()) {
+            return true;
+        }
+
+        return super.charTyped(character, modifiers);
+    }
+
+    private void setSearchText(String text) {
+        craftingTreeWidget.setSearchString(text);
+        craftingTreeWidget.reBuild();
     }
 }
