@@ -377,7 +377,7 @@ public class CraftingTreeWidget {
             currentMatchNode = null;
             return;
         }
-        currentMatchNode = cache.get(0);
+        currentMatchNode = cache.get(currentMatchIdx % cache.size());
     }
 
     // Buttons' updatePosition
