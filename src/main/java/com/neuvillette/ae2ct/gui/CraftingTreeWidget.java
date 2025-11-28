@@ -73,7 +73,6 @@ public class CraftingTreeWidget {
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
         updateNodeManager();
-        updateSearch();
         if (_nodeManager != null) {
             if(Config.USE_COMPACT_TREE.get() != helper.now_mode)
             {
@@ -81,6 +80,7 @@ public class CraftingTreeWidget {
             }
             poseStack.scale(scroll, scroll, scroll);
             drawNode(guiGraphics, _nodeManager.root);
+            updateSearch();
         }
         poseStack.popPose();
         guiGraphics.disableScissor();
@@ -377,14 +377,17 @@ public class CraftingTreeWidget {
             currentMatchNode = null;
             return;
         }
-        currentMatchNode = cache.get(currentMatchIdx % cache.size());
+        currentMatchNode = cache.get(currentMatchIdx);
     }
 
     // Buttons' updatePosition
     public void matchSwitch(boolean next) {
         if(cache == null || cache.isEmpty()) return;
-        currentMatchIdx += (next ? 1 : -1);
-        currentMatchNode = cache.get(currentMatchIdx % cache.size());
+        currentMatchIdx += next ? 1 : -1;
+        while(currentMatchIdx < 0 || currentMatchIdx >= cache.size()) {
+            currentMatchIdx = (currentMatchIdx + cache.size()) % cache.size();
+        }
+        updateSearch();
         outputX = 20 - currentMatchNode.point.x * spacingX;
         outputY = 30 - currentMatchNode.point.y * spacingY;
     }
