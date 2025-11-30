@@ -10,14 +10,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class CraftingTreeHelper {
     private RecipeHelper recipeHelper;
     private List<CraftingPlanSummaryEntry> entries;
     private Map<AEKey, RecipeHelper.Recipe> cache = new HashMap<>();
     private Map<AEKey, AmountHelper> amountCache = new HashMap<>();
-    private Map<Point, Node> nodesMap = new HashMap<>();
 
+    private Node root = null;
+    private Node missingOnlyRoot = null;
+
+    private String searchString = "";
     private int max_x = 0;
     private int max_y = 0;
 
@@ -28,10 +32,20 @@ public class CraftingTreeHelper {
     }
 
     public NodeManager build(boolean isMissingOnly){
-        if (recipeHelper == null) return null;
+        var node = isMissingOnly ? missingOnlyRoot : root;
+        if(node == null) {
+            return null;
+        }
+        NodeManager nodeManager = new NodeManager(node);
+        nodeManager.nodeSetPoint(node, new Point(0, 0));
+        buildNodePosition(node, nodeManager);
+        return nodeManager;
+    }
+
+    public void preBuild() {
+        if (recipeHelper == null) return;
 
         cache.clear();
-        nodesMap.clear();
         var recipes = recipeHelper.recipes;
         for(var recipe : recipes){
             var output = recipe.outputs().getFirst().what();
@@ -65,15 +79,11 @@ public class CraftingTreeHelper {
         }
         max_x = 0;
         max_y = 0;
-        var node = buildNode(output, amount, inputs, times, outputamount, null);
-        NodeManager nodeManager = new NodeManager(node);
-        if(isMissingOnly) missingOnly(node);
-        nodeManager.nodeSetPoint(node, new Point(0, 0));
-        buildNodePosition(node, nodeManager);
-        return nodeManager;
+        root = buildNode(output, amount, inputs, times, outputamount, null);
+        missingOnlyRoot = missingOnly(root);
     }
 
-    private static Node missingOnly(Node node){
+    private Node missingOnly(Node node){
         if(node == null) {
             return null;
         }
@@ -85,13 +95,16 @@ public class CraftingTreeHelper {
                 newSubNodes.add(newSubNode);
             }
         }
-        node.subNodes = newSubNodes;
-
-        if (node.amountHelper.missingAmount <= 0 && node.subNodes.isEmpty()) {
+        Node t = new Node(node.stack, node.amount, node.amountHelper, newSubNodes);
+        t.parent = node.parent;
+        for(Node subNode : newSubNodes) {
+            subNode.parent = t;
+        }
+        if (t.amountHelper.missingAmount <= 0 && t.subNodes.isEmpty()) {
             return null;
         }
 
-        return node;
+        return t;
     }
 
     public void buildNodePosition(Node node, NodeManager nodeManager){
@@ -101,7 +114,7 @@ public class CraftingTreeHelper {
             buildCompactNode(node, nodeManager, new Point(0, 0));
         }else{
             now_mode = false;
-            bulidLooseNode(node, nodeManager, new Point(0, 0), 1);
+            buildLooseNode(node, nodeManager, new Point(0, 0), 1);
         }
     }
 
@@ -187,7 +200,7 @@ public class CraftingTreeHelper {
         }
     }
 
-    public int bulidLooseNode(Node node, NodeManager manager, Point point, int len){
+    public int buildLooseNode(Node node, NodeManager manager, Point point, int len){
         int x = point.x + len;
         int y = point.y + 1;
         if (x > max_x) max_x = x;
@@ -198,10 +211,40 @@ public class CraftingTreeHelper {
             return 1;
         }
         for(var subNode : node.subNodes){
-            l += bulidLooseNode(subNode, manager, new Point(x, y), l);
+            l += buildLooseNode(subNode, manager, new Point(x, y), l);
         }
         manager.nodeSetPoint(node, new Point(x, y));
         return l;
+    }
+
+
+    public void setSearchString(String searchString) {
+        if(!this.searchString.equals(searchString)) {
+            this.searchString = searchString;
+        }
+    }
+
+    public List<Node> search(Node root) {
+        if(root == null || searchString.isEmpty()) {
+            return null;
+        }
+
+        List<Node> selected = new ArrayList<>();
+        Stack<Node> stack = new Stack<>();
+        stack.push(root);
+
+        while(!stack.isEmpty()) {
+            Node node = stack.pop();
+            if(node.stack.what().getDisplayName().getString().toLowerCase().contains(searchString)) {
+                selected.add(node);
+            }
+
+            for(int i = node.subNodes.size() - 1; i >= 0; i--) {
+                stack.push(node.subNodes.get(i));
+            }
+        }
+
+        return selected;
     }
 
     public class NodeManager{

@@ -22,6 +22,24 @@
       "top": -5,
       "width": 20,
       "height": 20
+    },
+    "searchField": {
+      "right": 150,
+      "top": 5,
+      "width": 89,
+      "height": 12
+    },
+    "pre": {
+      "right": 56,
+      "top": 3,
+      "width": 16,
+      "height": 16
+    },
+    "nxt": {
+      "right": 40,
+      "top": 3,
+      "width": 16,
+      "height": 16
     }
   }
 }
